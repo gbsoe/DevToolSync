@@ -485,14 +485,21 @@ class YoutubeDownloader:
                             v = pytube.YouTube(url, on_progress_callback=self._pytube_progress_callback(progress_hook))
                             
                             # Select stream based on format_id
-                            if format_id == '1080p':
-                                stream = v.streams.filter(progressive=True, res="1080p").first() or v.streams.get_highest_resolution()
-                            elif format_id == '720p':
-                                stream = v.streams.filter(progressive=True, res="720p").first() or v.streams.get_highest_resolution()
-                            elif format_id == '480p':
-                                stream = v.streams.filter(progressive=True, res="480p").first() or v.streams.get_highest_resolution()
-                            elif format_id == '360p':
-                                stream = v.streams.filter(progressive=True, res="360p").first() or v.streams.get_highest_resolution()
+                            if format_id.endswith('p'):
+                                try:
+                                    # Try to use the exact resolution
+                                    stream = v.streams.filter(progressive=True, res=format_id).first()
+                                    if not stream:
+                                        # If exact resolution not available, get the highest resolution that's not higher than requested
+                                        height = int(format_id.replace('p', ''))
+                                        for res in ['2160p', '1440p', '1080p', '720p', '480p', '360p', '240p', '144p']:
+                                            res_height = int(res.replace('p', ''))
+                                            if res_height <= height:
+                                                stream = v.streams.filter(progressive=True, res=res).first()
+                                                if stream:
+                                                    break
+                                except (ValueError, AttributeError):
+                                    stream = v.streams.get_highest_resolution()
                             else:
                                 stream = v.streams.get_highest_resolution()
                             
