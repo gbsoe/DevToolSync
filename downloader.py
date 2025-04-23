@@ -133,27 +133,41 @@ class YoutubeDownloader:
                     formats = info.get('formats', [])
                     format_dict = {}
                     
-                    # Extract the desired formats for the UI
+                    # Extract the actual available formats for the UI
                     video_formats = []
-                    for f in formats:
-                        if f.get('vcodec') != 'none' and f.get('acodec') != 'none':
-                            height = f.get('height', 0)
-                            if height >= 1080 and '1080p' not in format_dict:
-                                format_dict['1080p'] = f['format_id']
-                                video_formats.append({'format_id': f['format_id'], 'format_note': '1080p (Video)'})
-                            elif height >= 720 and height < 1080 and '720p' not in format_dict:
-                                format_dict['720p'] = f['format_id']
-                                video_formats.append({'format_id': f['format_id'], 'format_note': '720p (Video)'})
-                            elif height >= 480 and height < 720 and '480p' not in format_dict:
-                                format_dict['480p'] = f['format_id']
-                                video_formats.append({'format_id': f['format_id'], 'format_note': '480p (Video)'})
-                            elif height >= 360 and height < 480 and '360p' not in format_dict:
-                                format_dict['360p'] = f['format_id']
-                                video_formats.append({'format_id': f['format_id'], 'format_note': '360p (Video)'})
+                    seen_resolutions = set()
                     
-                    # If no specific formats were found, add "best" option
-                    if not video_formats:
-                        video_formats.append({'format_id': 'best', 'format_note': 'Best Quality (Video)'})
+                    # First, add "best" option
+                    video_formats.append({'format_id': 'best', 'format_note': 'Best Quality (Video)'})
+                    
+                    # Sort formats by resolution (height) in descending order
+                    sorted_formats = sorted(
+                        [f for f in formats if f.get('vcodec') != 'none' and f.get('acodec') != 'none'],
+                        key=lambda x: (x.get('height', 0) or 0, x.get('tbr', 0) or 0),
+                        reverse=True
+                    )
+                    
+                    # Collect unique resolutions with their best quality format
+                    for f in sorted_formats:
+                        height = f.get('height', 0)
+                        if height and height not in seen_resolutions and height >= 144:  # Minimum resolution threshold
+                            format_note = f"{height}p (Video)"
+                            format_id = f['format_id']
+                            
+                            video_formats.append({
+                                'format_id': format_id,
+                                'format_note': format_note,
+                                'height': height,
+                                'filesize': f.get('filesize', 0),
+                                'vcodec': f.get('vcodec', 'unknown')
+                            })
+                            
+                            seen_resolutions.add(height)
+                            format_dict[f"{height}p"] = format_id
+                    
+                    # If no specific formats were found, make sure we have the "best" option
+                    if len(video_formats) <= 1:
+                        logger.warning("No specific formats found for video, using 'best' option only")
                     
                     # Audio formats
                     audio_formats = [
@@ -221,6 +235,41 @@ class YoutubeDownloader:
                 else:
                     # Handle single video with pytube
                     v = pytube.YouTube(url)
+                    
+                    # Extract available formats from pytube streams
+                    video_formats = [{'format_id': 'best', 'format_note': 'Best Quality (Video)'}]
+                    seen_resolutions = set()
+                    
+                    # Get progressive streams (with audio and video combined)
+                    streams = v.streams.filter(progressive=True).order_by('resolution').desc()
+                    
+                    for stream in streams:
+                        if stream.resolution:
+                            # Extract the resolution number from string like "720p"
+                            try:
+                                height = int(stream.resolution.replace('p', ''))
+                                if height not in seen_resolutions:
+                                    video_formats.append({
+                                        'format_id': stream.itag,
+                                        'format_note': f"{height}p (Video)",
+                                        'height': height,
+                                        'filesize': stream.filesize,
+                                        'vcodec': stream.video_codec
+                                    })
+                                    seen_resolutions.add(height)
+                            except (ValueError, AttributeError):
+                                pass
+                    
+                    # If no formats found, fallback to defaults
+                    if len(video_formats) <= 1:
+                        logger.warning("No specific formats found with pytube, using defaults")
+                        video_formats = [
+                            {'format_id': 'best', 'format_note': 'Best Quality (Video)'},
+                            {'format_id': '720p', 'format_note': '720p (Video)'},
+                            {'format_id': '480p', 'format_note': '480p (Video)'},
+                            {'format_id': '360p', 'format_note': '360p (Video)'}
+                        ]
+                    
                     return {
                         'is_playlist': False,
                         'id': v.video_id,
@@ -228,12 +277,7 @@ class YoutubeDownloader:
                         'description': v.description,
                         'duration': v.length,
                         'thumbnail': v.thumbnail_url,
-                        'formats': [
-                            {'format_id': 'best', 'format_note': 'Best Quality (Video)'},
-                            {'format_id': '720p', 'format_note': '720p (Video)'},
-                            {'format_id': '480p', 'format_note': '480p (Video)'},
-                            {'format_id': '360p', 'format_note': '360p (Video)'}
-                        ],
+                        'formats': video_formats,
                         'audio_formats': [
                             {'format_id': 'bestaudio', 'format_note': 'Best Quality (Audio)'},
                             {'format_id': 'mp3', 'format_note': 'MP3'},
@@ -271,16 +315,17 @@ class YoutubeDownloader:
         if progress_hook:
             ydl_opts['progress_hooks'] = [progress_hook]
         
-        # If it's a playlist and format selection is a named quality, map it
-        if playlist and format_id in ['1080p', '720p', '480p', '360p']:
-            if format_id == '1080p':
-                ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'
-            elif format_id == '720p':
-                ydl_opts['format'] = 'bestvideo[height<=720]+bestaudio/best[height<=720]'
-            elif format_id == '480p':
-                ydl_opts['format'] = 'bestvideo[height<=480]+bestaudio/best[height<=480]'
-            elif format_id == '360p':
-                ydl_opts['format'] = 'bestvideo[height<=360]+bestaudio/best[height<=360]'
+        # If the format_id represents a height (e.g., ends with 'p'), use appropriate format selector
+        if format_id.endswith('p'):
+            try:
+                # Extract height value from format like "720p"
+                height = int(format_id.replace('p', ''))
+                ydl_opts['format'] = f'bestvideo[height<={height}]+bestaudio/best[height<={height}]'
+                logger.debug(f"Using format selector for height {height}p")
+            except (ValueError, AttributeError):
+                # If conversion fails, just keep the original format_id
+                logger.debug(f"Could not parse height from format: {format_id}")
+                pass
         
         # For playlists, create a ZIP file
         if playlist:
@@ -406,14 +451,21 @@ class YoutubeDownloader:
                                         v = pytube.YouTube(video_url)
                                         
                                         # Select stream based on format_id
-                                        if format_id == '1080p':
-                                            stream = v.streams.filter(progressive=True, res="1080p").first() or v.streams.get_highest_resolution()
-                                        elif format_id == '720p':
-                                            stream = v.streams.filter(progressive=True, res="720p").first() or v.streams.get_highest_resolution()
-                                        elif format_id == '480p':
-                                            stream = v.streams.filter(progressive=True, res="480p").first() or v.streams.get_highest_resolution()
-                                        elif format_id == '360p':
-                                            stream = v.streams.filter(progressive=True, res="360p").first() or v.streams.get_highest_resolution()
+                                        if format_id.endswith('p'):
+                                            try:
+                                                # Try to use the exact resolution
+                                                stream = v.streams.filter(progressive=True, res=format_id).first()
+                                                if not stream:
+                                                    # If exact resolution not available, get the highest resolution that's not higher than requested
+                                                    height = int(format_id.replace('p', ''))
+                                                    for res in ['2160p', '1440p', '1080p', '720p', '480p', '360p', '240p', '144p']:
+                                                        res_height = int(res.replace('p', ''))
+                                                        if res_height <= height:
+                                                            stream = v.streams.filter(progressive=True, res=res).first()
+                                                            if stream:
+                                                                break
+                                            except (ValueError, AttributeError):
+                                                stream = v.streams.get_highest_resolution()
                                         else:
                                             stream = v.streams.get_highest_resolution()
                                         
