@@ -124,6 +124,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show video info container
         videoInfoContainer.style.display = 'block';
         
+        // Scroll to video info container with smooth animation
+        videoInfoContainer.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start'
+        });
+        
         if (videoInfo.is_playlist) {
             // Display playlist information
             displayPlaylistInfo(videoInfo);

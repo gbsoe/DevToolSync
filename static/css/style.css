@@ -18,6 +18,11 @@
   box-sizing: border-box;
 }
 
+/* Add smooth scrolling to the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   padding-top: 60px;
   padding-bottom: 40px;
@@ -56,7 +61,18 @@ body {
 .video-info-card {
   margin-top: 20px;
   margin-bottom: 20px;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
+  opacity: 1;
+}
+
+/* Fade-in animation for the video info card */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#video-info {
+  animation: fadeIn 0.5s ease-out;
 }
 
 .video-info-card img {
