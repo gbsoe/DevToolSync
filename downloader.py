@@ -839,7 +839,8 @@ def process_download(download_id, url, format_id, download_type, playlist):
             download_progress[download_id]['start_time'] = time.time()
 
         from app import app  # Import at function level to avoid circular imports
-        # app.app_context().push()  #Removed - Context is managed correctly now.
+        app_context = app.app_context()  # Create application context
+        app_context.push()  # Push the context
         downloader = YoutubeDownloader()
         filename = None
         try:
@@ -887,6 +888,8 @@ def process_download(download_id, url, format_id, download_type, playlist):
 
     except Exception as e:
         logger.exception(f"Error processing download {download_id}: {str(e)}")
+    finally:
+        app_context.pop()  # Ensure we always clean up the context
 
 def update_progress(download_id, progress):
     """Update download progress"""
