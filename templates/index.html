@@ -34,7 +34,7 @@
                 </div>
                 <div class="card-body">
                     <form id="youtube-form" aria-label="YouTube downloader form">
-                        <div class="url-input-container">
+                        <div class="url-input-container mb-4">
                             <label for="youtube-url" class="form-label">Enter YouTube URL</label>
                             <input type="url" class="form-control form-control-lg" id="youtube-url" 
                                    placeholder="https://www.youtube.com/watch?v=..." required
@@ -42,6 +42,53 @@
                             <i class="bi bi-link-45deg" aria-hidden="true"></i>
                             <div id="url-help" class="form-text">Paste any YouTube video or playlist link here</div>
                         </div>
+                        
+                        <!-- Download Options (moved here) -->
+                        <div id="video-info" class="card video-info-card mb-4">
+                            <div class="card-body">
+                                <div class="mt-2">
+                                    <h5 class="mb-3">Download Options</h5>
+                                    <ul class="nav nav-tabs" id="formatTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="video-tab-button" data-bs-toggle="tab" 
+                                                    data-bs-target="#video-tab" type="button" role="tab">
+                                                <i class="bi bi-camera-video me-2"></i>Video
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="audio-tab-button" data-bs-toggle="tab" 
+                                                    data-bs-target="#audio-tab" type="button" role="tab">
+                                                <i class="bi bi-music-note me-2"></i>Audio
+                                            </button>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content mt-3">
+                                        <div class="tab-pane fade show active" id="video-tab" role="tabpanel">
+                                            <div id="video-formats" class="format-options"></div>
+                                        </div>
+                                        <div class="tab-pane fade" id="audio-tab" role="tabpanel">
+                                            <div id="audio-formats" class="format-options"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Progress Bar -->
+                                <div id="progress-container" class="mt-4" style="display: none;">
+                                    <div class="progress">
+                                        <div id="progress-bar" class="progress-bar"></div>
+                                    </div>
+                                    <div id="progress-text" class="text-center mt-2"></div>
+                                </div>
+                                
+                                <!-- Download Button -->
+                                <div class="d-grid gap-2 mt-4">
+                                    <button id="download-button" class="btn btn-success btn-lg" disabled>
+                                        <i class="bi bi-download me-2"></i>Select a format
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="d-grid gap-2 mt-3">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-search me-2" aria-hidden="true"></i>Get Video Info

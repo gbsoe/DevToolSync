@@ -91,6 +91,7 @@ class YoutubeDownloader:
                 'geo_bypass': True,
                 'nocheckcertificate': True,
                 'ignoreerrors': False,
+                'cookiesfrombrowser': ('chrome',),  # Extract cookies from Chrome
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
