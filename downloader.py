@@ -25,6 +25,12 @@ class YoutubeDownloader:
 
         # Check if ffmpeg is available
         self.ffmpeg_available = self._check_ffmpeg()
+        
+        # Ensure cookies file exists
+        if not os.path.exists('cookies.txt'):
+            with open('cookies.txt', 'w') as f:
+                f.write('# Netscape HTTP Cookie File\n')
+            logger.warning("Created empty cookies.txt file")
 
     def _check_ffmpeg(self):
         """Check if ffmpeg is available on the system"""
