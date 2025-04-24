@@ -276,23 +276,24 @@ def get_file(download_id):
             if filename and os.path.exists(filename):
                 basename = os.path.basename(filename)
                 
-                # After download is complete, mark for cleanup
+                # Only start cleanup after successful download completion
                 def cleanup_file():
-                    # Wait a bit to ensure file is fully downloaded
-                    time.sleep(300)  # 5 minutes
                     try:
-                        if os.path.exists(filename):
-                            os.remove(filename)
-                            logger.debug(f"Removed temporary file: {filename}")
+                        time.sleep(600)  # 10 minutes wait
                         with downloads_lock:
                             if download_id in download_progress:
+                                if os.path.exists(filename):
+                                    os.remove(filename)
+                                    logger.debug(f"Removed temporary file: {filename}")
                                 del download_progress[download_id]
                     except Exception as e:
                         logger.error(f"Error cleaning up file: {str(e)}")
-                
-                cleanup_thread = threading.Thread(target=cleanup_file)
-                cleanup_thread.daemon = True
-                cleanup_thread.start()
+
+                if not getattr(cleanup_file, 'started', False):
+                    cleanup_thread = threading.Thread(target=cleanup_file)
+                    cleanup_thread.daemon = True
+                    cleanup_thread.start()
+                    setattr(cleanup_file, 'started', True)
                 
                 return send_file(
                     filename,
