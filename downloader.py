@@ -833,15 +833,13 @@ class Download(db.Model):
 
 def process_download(download_id, url, format_id, download_type, playlist):
     """Process the download in a background thread"""
-    from app import app  # Import at function level to avoid circular imports
-
     try:
         with downloads_lock:
             download_progress[download_id]['status'] = 'downloading'
             download_progress[download_id]['start_time'] = time.time()
-
-        # Create application context
-        with app.app_context():
+        
+        from app import app  # Import at function level to avoid circular imports
+        app.app_context().push()  # Push application context
             downloader = YoutubeDownloader()
             filename = None
             try:
