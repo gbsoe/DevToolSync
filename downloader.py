@@ -6,17 +6,25 @@ import yt_dlp
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+from cookie_manager import CookieManager
+
 class YoutubeDownloader:
     def __init__(self):
-        self.ydl_opts = {
+        self.cookie_manager = CookieManager()
+        self.base_opts = {
             'quiet': True,
             'no_warnings': True,
             'extract_flat': True
         }
+        # Add proxy if configured
+        if os.environ.get('USE_PROXY'):
+            self.base_opts['proxy'] = os.environ.get('PROXY_URL')
 
     def get_video_info(self, url):
         try:
-            with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
+            self.cookie_manager.ensure_fresh_cookies()
+            opts = {**self.base_opts, 'cookiefile': self.cookie_manager.cookie_file}
+            with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=False)
                 return info
         except Exception as e:
