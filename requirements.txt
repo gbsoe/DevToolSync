@@ -11,3 +11,4 @@ werkzeug>=3.1.3
 yt-dlp>=2025.3.31
 yt-dlp
 browser-cookie3
+playwright

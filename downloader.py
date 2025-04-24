@@ -1,4 +1,3 @@
-
 import logging
 import os
 import yt_dlp
@@ -6,11 +5,10 @@ import yt_dlp
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-from cookie_manager import CookieManager
+from cookie_manager import ensure_fresh_cookies
 
 class YoutubeDownloader:
     def __init__(self):
-        self.cookie_manager = CookieManager()
         self.base_opts = {
             'quiet': True,
             'no_warnings': True,
@@ -22,8 +20,9 @@ class YoutubeDownloader:
 
     def get_video_info(self, url):
         try:
-            self.cookie_manager.ensure_fresh_cookies()
-            opts = {**self.base_opts, 'cookiefile': self.cookie_manager.cookie_file}
+            if not ensure_fresh_cookies():
+                raise Exception("Failed to refresh YouTube cookies")
+            opts = {**self.base_opts, 'cookiefile': 'cookies.txt'}
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=False)
                 return info
@@ -40,7 +39,7 @@ class YoutubeDownloader:
             }
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
-            
+
             with yt_dlp.YoutubeDL(options) as ydl:
                 info = ydl.extract_info(url, download=True)
                 return os.path.join(output_path, ydl.prepare_filename(info))
