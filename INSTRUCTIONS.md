@@ -123,6 +123,43 @@ Must include:
    - Automatic cleanup after downloads
    - ZIP file creation for playlists
 
+## UI/UX Requirements
+
+1. Visual Design
+   - Bootstrap 5 dark theme integration
+   - Custom YouTube-themed styling
+   - Responsive layout for all devices
+   - Consistent branding and color scheme
+   - Loading animations and transitions
+   - Feature cards with hover effects
+   - Custom progress bar animations
+
+2. User Experience
+   - Real-time download progress tracking
+   - Format selection interface with visual feedback
+   - Error messages with icons and clear text
+   - Tooltips for additional information
+   - Playlist preview with scrollable list
+   - Video/Audio toggle tabs
+   - Donation banner with call-to-action
+
+3. Responsive Components
+   - Mobile-first approach
+   - Adaptive video cards
+   - Flexible form layouts
+   - Touch-friendly buttons
+   - Readable text at all screen sizes
+   - Properly spaced elements
+
+4. Interactive Elements
+   - Format selection with active states
+   - Download button state changes
+   - Progress bar animations
+   - Tab switching animations
+   - Hover effects on cards
+   - Custom radio button styling
+   - Bootstrap icon integration
+
 ## Features to Verify
 
 1. Video Downloads
