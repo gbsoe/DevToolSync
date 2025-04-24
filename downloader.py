@@ -798,3 +798,98 @@ class YoutubeDownloader:
             })
 
         return callback
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+import threading
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./downloads.db' # Replace with your database URI
+db = SQLAlchemy(app)
+downloads_lock = threading.Lock()
+download_progress = {}
+
+class Download(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    download_id = db.Column(db.String(100), unique=True, nullable=False)
+    url = db.Column(db.String(2000), nullable=False)
+    format_id = db.Column(db.String(100), nullable=False)
+    download_type = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    file_size = db.Column(db.Integer)
+    download_time = db.Column(db.Float)
+
+    def __repr__(self):
+        return f'<Download {self.download_id}>'
+
+    @staticmethod
+    def update_status(download_id, status, file_size=None, download_time=None):
+        download = Download.query.filter_by(download_id=download_id).first()
+        if download:
+            download.status = status
+            download.file_size = file_size
+            download.download_time = download_time
+            db.session.commit()
+
+def process_download(download_id, url, format_id, download_type, playlist):
+    """Process the download in a background thread"""
+    from app import app  # Import at function level to avoid circular imports
+
+    try:
+        with downloads_lock:
+            download_progress[download_id]['status'] = 'downloading'
+            download_progress[download_id]['start_time'] = time.time()
+
+        # Create application context
+        with app.app_context():
+            downloader = YoutubeDownloader()
+            filename = None
+            try:
+                if download_type == 'video':
+                    filename = downloader.download_video(url, format_id, progress_hook=lambda progress: update_progress(download_id, progress), playlist=playlist)
+                elif download_type == 'audio':
+                    filename = downloader.download_audio(url, progress_hook=lambda progress: update_progress(download_id, progress), playlist=playlist)
+                else:
+                    raise ValueError("Invalid download type")
+                download_progress[download_id]['status'] = 'completed'
+                download_progress[download_id]['filename'] = filename
+                # Update database record if we have one
+                db_id = download_progress[download_id].get('db_id')
+                if db_id:
+                    try:
+                        with app.app_context():
+                            # Get file size if available
+                            file_size = os.path.getsize(filename) if os.path.exists(filename) else None
+
+                            # Calculate download time (estimate)
+                            start_time = download_progress[download_id].get('start_time', time.time() - 30)
+                            download_time = time.time() - start_time
+
+                            # Update record in database
+                            Download.update_status(
+                                download_id=db_id,
+                                status="completed",
+                                file_size=file_size,
+                                download_time=download_time
+                            )
+                    except Exception as db_error:
+                        logger.error(f"Error updating download record: {str(db_error)}")
+
+            except Exception as e:
+                download_progress[download_id]['status'] = 'failed'
+                download_progress[download_id]['error'] = str(e)
+                logger.error(f"Download failed for {download_id}: {str(e)}")
+
+    except Exception as e:
+        logger.exception(f"Error processing download {download_id}: {str(e)}")
+
+def update_progress(download_id, progress):
+    """Update download progress"""
+    with downloads_lock:
+        if download_id in download_progress:
+            download_progress[download_id].update(progress)
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        app.run(debug=True)
