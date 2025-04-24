@@ -837,46 +837,46 @@ def process_download(download_id, url, format_id, download_type, playlist):
         with downloads_lock:
             download_progress[download_id]['status'] = 'downloading'
             download_progress[download_id]['start_time'] = time.time()
-        
+
         from app import app  # Import at function level to avoid circular imports
         app.app_context().push()  # Push application context
         downloader = YoutubeDownloader()
         filename = None
         try:
-                if download_type == 'video':
-                    filename = downloader.download_video(url, format_id, progress_hook=lambda progress: update_progress(download_id, progress), playlist=playlist)
-                elif download_type == 'audio':
-                    filename = downloader.download_audio(url, progress_hook=lambda progress: update_progress(download_id, progress), playlist=playlist)
-                else:
-                    raise ValueError("Invalid download type")
-                download_progress[download_id]['status'] = 'completed'
-                download_progress[download_id]['filename'] = filename
-                # Update database record if we have one
-                db_id = download_progress[download_id].get('db_id')
-                if db_id:
-                    try:
-                        with app.app_context():
-                            # Get file size if available
-                            file_size = os.path.getsize(filename) if os.path.exists(filename) else None
+            if download_type == 'video':
+                filename = downloader.download_video(url, format_id, progress_hook=lambda progress: update_progress(download_id, progress), playlist=playlist)
+            elif download_type == 'audio':
+                filename = downloader.download_audio(url, progress_hook=lambda progress: update_progress(download_id, progress), playlist=playlist)
+            else:
+                raise ValueError("Invalid download type")
+            download_progress[download_id]['status'] = 'completed'
+            download_progress[download_id]['filename'] = filename
+            # Update database record if we have one
+            db_id = download_progress[download_id].get('db_id')
+            if db_id:
+                try:
+                    with app.app_context():
+                        # Get file size if available
+                        file_size = os.path.getsize(filename) if os.path.exists(filename) else None
 
-                            # Calculate download time (estimate)
-                            start_time = download_progress[download_id].get('start_time', time.time() - 30)
-                            download_time = time.time() - start_time
+                        # Calculate download time (estimate)
+                        start_time = download_progress[download_id].get('start_time', time.time() - 30)
+                        download_time = time.time() - start_time
 
-                            # Update record in database
-                            Download.update_status(
-                                download_id=db_id,
-                                status="completed",
-                                file_size=file_size,
-                                download_time=download_time
-                            )
-                    except Exception as db_error:
-                        logger.error(f"Error updating download record: {str(db_error)}")
+                        # Update record in database
+                        Download.update_status(
+                            download_id=db_id,
+                            status="completed",
+                            file_size=file_size,
+                            download_time=download_time
+                        )
+                except Exception as db_error:
+                    logger.error(f"Error updating download record: {str(db_error)}")
 
-            except Exception as e:
-                download_progress[download_id]['status'] = 'failed'
-                download_progress[download_id]['error'] = str(e)
-                logger.error(f"Download failed for {download_id}: {str(e)}")
+        except Exception as e:
+            download_progress[download_id]['status'] = 'failed'
+            download_progress[download_id]['error'] = str(e)
+            logger.error(f"Download failed for {download_id}: {str(e)}")
 
     except Exception as e:
         logger.exception(f"Error processing download {download_id}: {str(e)}")
