@@ -837,8 +837,10 @@ class Download(db.Model):
 def process_download(download_id, url, format_id, download_type, playlist):
     """Process the download in a background thread"""
     try:
-        with downloads_lock:
-            download_progress[download_id]['status'] = 'downloading'
+        from app import app  # Import at function level to avoid circular imports
+        with app.app_context():  # Ensure we have application context
+            with downloads_lock:
+                download_progress[download_id]['status'] = 'downloading'
             download_progress[download_id]['start_time'] = time.time()
 
         from app import app  # Import at function level to avoid circular imports
