@@ -840,9 +840,9 @@ def process_download(download_id, url, format_id, download_type, playlist):
         
         from app import app  # Import at function level to avoid circular imports
         app.app_context().push()  # Push application context
-            downloader = YoutubeDownloader()
-            filename = None
-            try:
+        downloader = YoutubeDownloader()
+        filename = None
+        try:
                 if download_type == 'video':
                     filename = downloader.download_video(url, format_id, progress_hook=lambda progress: update_progress(download_id, progress), playlist=playlist)
                 elif download_type == 'audio':
