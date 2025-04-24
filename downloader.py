@@ -839,7 +839,7 @@ def process_download(download_id, url, format_id, download_type, playlist):
             download_progress[download_id]['start_time'] = time.time()
 
         from app import app  # Import at function level to avoid circular imports
-        app.app_context().push()  # Push application context
+        # app.app_context().push()  #Removed - Context is managed correctly now.
         downloader = YoutubeDownloader()
         filename = None
         try:
@@ -855,15 +855,15 @@ def process_download(download_id, url, format_id, download_type, playlist):
             db_id = download_progress[download_id].get('db_id')
             if db_id:
                 try:
+                    # Get file size if available
+                    file_size = os.path.getsize(filename) if os.path.exists(filename) else None
+
+                    # Calculate download time (estimate)
+                    start_time = download_progress[download_id].get('start_time', time.time() - 30)
+                    download_time = time.time() - start_time
+
+                    # Update record in database within app context
                     with app.app_context():
-                        # Get file size if available
-                        file_size = os.path.getsize(filename) if os.path.exists(filename) else None
-
-                        # Calculate download time (estimate)
-                        start_time = download_progress[download_id].get('start_time', time.time() - 30)
-                        download_time = time.time() - start_time
-
-                        # Update record in database
                         Download.update_status(
                             download_id=db_id,
                             status="completed",
@@ -877,6 +877,13 @@ def process_download(download_id, url, format_id, download_type, playlist):
             download_progress[download_id]['status'] = 'failed'
             download_progress[download_id]['error'] = str(e)
             logger.error(f"Download failed for {download_id}: {str(e)}")
+            # Update failed status in database
+            if db_id:
+                try:
+                    with app.app_context():
+                        Download.update_status(download_id=db_id, status="failed")
+                except Exception as db_error:
+                    logger.error(f"Error updating download record: {str(db_error)}")
 
     except Exception as e:
         logger.exception(f"Error processing download {download_id}: {str(e)}")
