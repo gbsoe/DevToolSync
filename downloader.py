@@ -91,6 +91,7 @@ class YoutubeDownloader:
                 'geo_bypass': True,
                 'nocheckcertificate': True,
                 'ignoreerrors': False,
+                'cookiefile': 'cookies.txt',
                 'http_headers': {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -315,6 +316,7 @@ class YoutubeDownloader:
             'no_warnings': True,
             'geo_bypass': True,
             'nocheckcertificate': True,
+            'cookiefile': 'cookies.txt',
         }
 
         # Add progress hook if provided
@@ -552,6 +554,7 @@ class YoutubeDownloader:
             'format': 'bestaudio/best',
             'outtmpl': output_template,
             'noplaylist': not playlist,
+            'cookiefile': 'cookies.txt',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
