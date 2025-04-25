@@ -330,6 +330,11 @@ def sitemap():
     """Serve sitemap.xml file"""
     return send_from_directory('static', 'sitemap.xml')
 
+@app.route('/google07df394c40c0da6f.html')
+def google_verification():
+    """Serve Google verification file"""
+    return send_file('google07df394c40c0da6f.html')
+
 @app.route('/privacy')
 def privacy_policy():
     """Privacy Policy page"""
