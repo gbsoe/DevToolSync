@@ -78,10 +78,26 @@ class YoutubeDownloader:
             
             # Filter formats to only include standard resolutions
             if 'formats' in info:
-                info['formats'] = [f for f in info['formats'] if 
-                    f.get('format_note', '').replace('p60', 'p') in ['1080p', '720p', '480p', '360p', '240p', '144p'] and
-                    not f.get('format_note', '').startswith('storyboard') and
-                    f.get('vcodec', 'none') != 'none']
+                seen_qualities = set()
+                filtered_formats = []
+                
+                # Sort formats by quality (higher resolution first)
+                sorted_formats = sorted(info['formats'], 
+                    key=lambda x: int(x.get('height', 0) or 0), 
+                    reverse=True
+                )
+                
+                for f in sorted_formats:
+                    format_note = f.get('format_note', '').replace('p60', 'p')
+                    if (format_note in ['1080p', '720p', '480p', '360p', '240p', '144p'] and
+                        not f.get('format_note', '').startswith('storyboard') and
+                        f.get('vcodec', 'none') != 'none' and
+                        format_note not in seen_qualities):
+                        
+                        filtered_formats.append(f)
+                        seen_qualities.add(format_note)
+                
+                info['formats'] = filtered_formats
             
             return info
             

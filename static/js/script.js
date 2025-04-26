@@ -551,6 +551,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             downloadCompleteAlert.style.display = 'block';
                             downloadLink.href = status.download_url;
                             downloadLink.download = status.filename ? status.filename.split('/').pop() : 'youtube_download';
+                            
+                            // Prevent the download button from triggering a new download
+                            downloadButton.disabled = true;
+                            downloadButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Download Complete';
+                            
+                            // Attach direct download handler to download link
+                            downloadLink.onclick = function(e) {
+                                e.stopPropagation();  // Prevent event bubbling
+                                return true;  // Allow default link behavior
+                            };
                         }
                         
                         if (status.status === 'error') {
