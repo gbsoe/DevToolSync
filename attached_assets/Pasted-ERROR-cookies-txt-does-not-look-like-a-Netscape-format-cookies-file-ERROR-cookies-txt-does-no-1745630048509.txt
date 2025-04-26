@@ -1,0 +1,72 @@
+ERROR: 'cookies.txt' does not look like a Netscape format cookies file
+ERROR: 'cookies.txt' does not look like a Netscape format cookies file
+ERROR:downloader:Error getting video info: ERROR: 'cookies.txt' does not look like a Netscape format cookies file
+ERROR:app:Error getting video info: ERROR: 'cookies.txt' does not look like a Netscape format cookies file
+
+HB
+
+honeybendi
+Assistant
+just now
+The error you're encountering indicates that the cookies.txt file does not conform to the Netscape format expected by yt-dlp. This can happen if the cookies are not written correctly.
+
+You should ensure that your serialize_netscape function is correctly converting the cookies into the expected format and that the file is being written properly. Here’s an updated version of your serialize_netscape function and how you save the cookies:
+
+Update the serialize_netscape function to write out correct cookie attributes.
+Ensure that you’re writing cookies into the cookies.txt file in the right format.
+Make sure your cookie_manager.py file's relevant sections look like this:
+
+def serialize_netscape(cookies):
+    """Convert cookies dictionary to Netscape format"""
+    lines = []
+    for cookie in cookies:
+        domain = cookie['domain']
+        path = cookie['path']
+        secure = 'TRUE' if cookie['secure'] else 'FALSE'
+        http_only = 'TRUE' if cookie['httpOnly'] else 'FALSE'
+        expires = str(int(time.time() + 3600 * 24 * 7))  # Default 1 week
+        lines.append(f"{domain}\t{http_only}\t{path}\t{secure}\t{expires}\t{cookie['name']}\t{cookie['value']}")
+    
+    return "\n".join(lines)
+def refresh_cookies():
+    """Get fresh YouTube cookies using Playwright"""
+    try:
+        email = os.environ.get('YT_EMAIL')
+        password = os.environ.get('YT_PASS')
+        if not email or not password:
+            logger.error("YouTube credentials not found in environment variables")
+            return False
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True, args=['--no-sandbox'])
+            context = browser.new_context()
+            page = context.new_page()
+            logger.info("Navigating to Google sign-in page...")
+            page.goto('https://accounts.google.com/signin/v2/identifier?service=youtube')
+            
+            logger.info("Entering email...")
+            page.fill('input[type="email"]', email)
+            page.click('button[jsname="LgbsSe"]')
+            logger.info("Waiting for password field...")
+            page.wait_for_selector('input[type="password"]', timeout=60000)
+            logger.info("Entering password...")
+            page.fill('input[type="password"]', password)
+            page.click('button[jsname="LgbsSe"]')
+            logger.info("Waiting for YouTube navigation...")
+            page.wait_for_url('https://www.youtube.com/*', timeout=60000)
+            
+            logger.info("Getting cookies...")
+            cookies = context.cookies()
+            logger.info("Writing cookies to file...")
+            with open(COOKIE_FILE, 'w') as f:
+                f.write(serialize_netscape(cookies))
+            logger.info("Successfully refreshed YouTube cookies")
+            browser.close()
+            return True
+    except Exception as e:
+        logger.error(f"Error refreshing cookies: {str(e)}")
+        if 'browser' in locals():
+            browser.close()
+        return False
+Remember:
+Ensure that the cookies you receive from context.cookies() contains the necessary attributes (like domain, name, value, path, httpOnly, and secure) to be formatted correctly by serialize_netscape.
+After updating the function, try running your downloader again. This should generate a valid cookies.txt file in the expected format, resolving the error you've encountered.
