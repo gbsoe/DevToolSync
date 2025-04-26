@@ -22,9 +22,26 @@ class YoutubeDownloader:
         try:
             if not ensure_fresh_cookies():
                 raise Exception("Failed to refresh YouTube cookies")
-            opts = {**self.base_opts, 'cookiefile': 'cookies.txt'}
+            opts = {
+                **self.base_opts,
+                'cookiefile': 'cookies.txt',
+                'format_sort': [
+                    'res:1080p',
+                    'res:720p',
+                    'res:480p',
+                    'res:360p',
+                    'res:240p',
+                    'res:144p'
+                ]
+            }
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=False)
+                # Filter formats to only include standard resolutions
+                if 'formats' in info:
+                    info['formats'] = [f for f in info['formats'] if 
+                        f.get('format_note', '').replace('p60', 'p') in ['1080p', '720p', '480p', '360p', '240p', '144p'] and
+                        not f.get('format_note', '').startswith('storyboard') and
+                        f.get('vcodec', 'none') != 'none']
                 return info
         except Exception as e:
             logger.error(f"Error getting video info: {str(e)}")
@@ -39,7 +56,10 @@ class YoutubeDownloader:
                 'format': format_id,
                 'progress_hooks': [progress_hook] if progress_hook else [],
                 'outtmpl': '%(title)s.%(ext)s',
-                'cookiefile': 'cookies.txt'  # Use the cookies file
+                'cookiefile': 'cookies.txt',
+                'quiet': False,
+                'no_warnings': False,
+                'verbose': True
             }
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
