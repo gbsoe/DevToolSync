@@ -32,10 +32,14 @@ class YoutubeDownloader:
 
     def download_video(self, url, format_id='best', output_path=None, progress_hook=None, playlist=False):
         try:
+            if not ensure_fresh_cookies():
+                raise Exception("Failed to refresh YouTube cookies")
+                
             options = {
                 'format': format_id,
                 'progress_hooks': [progress_hook] if progress_hook else [],
-                'outtmpl': '%(title)s.%(ext)s'
+                'outtmpl': '%(title)s.%(ext)s',
+                'cookiefile': 'cookies.txt'  # Use the cookies file
             }
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
@@ -49,6 +53,9 @@ class YoutubeDownloader:
 
     def download_audio(self, url, output_path=None, progress_hook=None, playlist=False):
         try:
+            if not ensure_fresh_cookies():
+                raise Exception("Failed to refresh YouTube cookies")
+                
             options = {
                 'format': 'bestaudio/best',
                 'postprocessors': [{
@@ -56,7 +63,8 @@ class YoutubeDownloader:
                     'preferredcodec': 'mp3',
                 }],
                 'progress_hooks': [progress_hook] if progress_hook else [],
-                'outtmpl': '%(title)s.%(ext)s'
+                'outtmpl': '%(title)s.%(ext)s',
+                'cookiefile': 'cookies.txt'  # Use the cookies file
             }
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
