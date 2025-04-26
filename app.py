@@ -175,9 +175,10 @@ def download_video():
 
 def process_download(download_id, url, format_id, download_type, playlist):
     """Process the download in a background thread"""
-    try:
-        with downloads_lock:
-            download_progress[download_id]['status'] = 'downloading'
+    with app.app_context():
+        try:
+            with downloads_lock:
+                download_progress[download_id]['status'] = 'downloading'
         
         # Define progress callback function
         def progress_hook(d):
