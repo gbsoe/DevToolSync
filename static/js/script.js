@@ -1,4 +1,88 @@
 // YouTube Downloader Frontend Functionality
+function updateProgress(downloadId) {
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const progressContainer = document.getElementById('progress-container');
+    const downloadComplete = document.getElementById('download-complete');
+    
+    function checkStatus() {
+        fetch(`/download_status/${downloadId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    progressText.textContent = `Error: ${data.error}`;
+                    return;
+                }
+                
+                progressContainer.style.display = 'block';
+                
+                if (data.status === 'downloading' && data.progress) {
+                    const percent = Math.round(data.progress);
+                    progressBar.style.width = `${percent}%`;
+                    progressBar.setAttribute('aria-valuenow', percent);
+                    progressText.textContent = `Downloading: ${percent}%`;
+                } else if (data.status === 'processing') {
+                    progressText.textContent = 'Processing download...';
+                } else if (data.status === 'complete') {
+                    progressContainer.style.display = 'none';
+                    downloadComplete.style.display = 'block';
+                    document.getElementById('download-link').href = data.download_url;
+                    return;
+                }
+                
+                setTimeout(checkStatus, 1000);
+            })
+            .catch(error => {
+                console.error('Error checking download status:', error);
+                progressText.textContent = 'Error checking download status';
+            });
+    }
+    
+    checkStatus();
+}
+
+// Add event listener for download button
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadButton = document.getElementById('download-button');
+    if (downloadButton) {
+        downloadButton.addEventListener('click', function() {
+            const url = document.getElementById('youtube-url').value;
+            const format = document.querySelector('input[name="format"]:checked')?.value;
+            
+            if (!url || !format) return;
+            
+            const progressContainer = document.getElementById('progress-container');
+            const downloadComplete = document.getElementById('download-complete');
+            progressContainer.style.display = 'block';
+            downloadComplete.style.display = 'none';
+            
+            fetch('/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    url: url,
+                    format: format,
+                    type: format.includes('audio') ? 'audio' : 'video'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                if (data.download_id) {
+                    updateProgress(data.download_id);
+                }
+            })
+            .catch(error => {
+                console.error('Error starting download:', error);
+                document.getElementById('progress-text').textContent = `Error: ${error.message}`;
+            });
+        });
+    }
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     // DOM Elements

@@ -51,15 +51,36 @@ class YoutubeDownloader:
         try:
             if not ensure_fresh_cookies():
                 raise Exception("Failed to refresh YouTube cookies")
-                
+            
+            def combined_progress_hook(d):
+                logger.info(f"Download progress: {d}")
+                if d['status'] == 'downloading':
+                    try:
+                        total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
+                        downloaded = d.get('downloaded_bytes', 0)
+                        if total > 0:
+                            percent = (downloaded / total) * 100
+                            speed = d.get('speed', 0)
+                            if speed:
+                                eta = d.get('eta', 0)
+                                d['_percent_str'] = f'{percent:.1f}%'
+                                d['_speed_str'] = f'{speed/1024/1024:.1f} MB/s'
+                                d['_eta_str'] = f'{eta} seconds'
+                    except Exception as e:
+                        logger.error(f"Error calculating progress: {e}")
+                if progress_hook:
+                    progress_hook(d)
+                    
             options = {
                 'format': format_id,
-                'progress_hooks': [progress_hook] if progress_hook else [],
+                'progress_hooks': [combined_progress_hook],
                 'outtmpl': '%(title)s.%(ext)s',
                 'cookiefile': 'cookies.txt',
                 'quiet': False,
                 'no_warnings': False,
-                'verbose': True
+                'verbose': True,
+                'noprogress': False,
+                'postprocessor_hooks': [combined_progress_hook]
             }
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
