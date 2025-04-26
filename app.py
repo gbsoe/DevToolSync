@@ -182,85 +182,85 @@ def process_download(download_id, url, format_id, download_type, playlist):
             
             # Define progress callback function
             def progress_hook(d):
-                if d['status'] == 'downloading':
-                    try:
+                try:
+                    if d['status'] == 'downloading':
                         total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
-                    downloaded = d.get('downloaded_bytes', 0)
+                        downloaded = d.get('downloaded_bytes', 0)
+                        
+                        if total > 0:
+                            percent = downloaded / total * 100
+                        else:
+                            percent = 0
+                        
+                        with downloads_lock:
+                            download_progress[download_id]['progress'] = percent
                     
-                    if total > 0:
-                        percent = downloaded / total * 100
-                    else:
-                        percent = 0
-                    
-                    with downloads_lock:
-                        download_progress[download_id]['progress'] = percent
+                    elif d['status'] == 'finished':
+                        with downloads_lock:
+                            download_progress[download_id]['status'] = 'processing'
                 except Exception as e:
                     logger.error(f"Error updating progress: {str(e)}")
             
-            elif d['status'] == 'finished':
-                with downloads_lock:
-                    download_progress[download_id]['status'] = 'processing'
-        
-        # Perform the download
-        if download_type == 'audio':
-            filename = downloader.download_audio(
-                url, 
-                output_path=TEMP_DIR, 
-                progress_hook=progress_hook,
-                playlist=playlist
-            )
-        else:  # video
-            filename = downloader.download_video(
-                url, 
-                format_id=format_id, 
-                output_path=TEMP_DIR, 
-                progress_hook=progress_hook,
-                playlist=playlist
-            )
-        
-        # Update download status
-        with downloads_lock:
-            download_progress[download_id]['status'] = 'complete'
-            download_progress[download_id]['filename'] = filename
+            # Perform the download
+            if download_type == 'audio':
+                filename = downloader.download_audio(
+                    url, 
+                    output_path=TEMP_DIR, 
+                    progress_hook=progress_hook,
+                    playlist=playlist
+                )
+            else:  # video
+                filename = downloader.download_video(
+                    url, 
+                    format_id=format_id, 
+                    output_path=TEMP_DIR, 
+                    progress_hook=progress_hook,
+                    playlist=playlist
+                )
             
-            # Update database record if we have one
-            db_id = download_progress[download_id].get('db_id')
-            if db_id:
-                try:
-                    # Get file size if available
-                    file_size = os.path.getsize(filename) if os.path.exists(filename) else None
-                    
-                    # Calculate download time (estimate)
-                    start_time = download_progress[download_id].get('start_time', time.time() - 30)
-                    download_time = time.time() - start_time
-                    
-                    # Update record in database
-                    Download.update_status(
-                        download_id=db_id,
-                        status="completed",
-                        file_size=file_size,
-                        download_time=download_time
-                    )
-                except Exception as db_error:
-                    logger.error(f"Error updating download record: {str(db_error)}")
-    
-    except Exception as e:
-        logger.error(f"Download error: {str(e)}")
-        with downloads_lock:
-            download_progress[download_id]['status'] = 'error'
-            download_progress[download_id]['error'] = str(e)
-            
-            # Update database record if we have one
-            db_id = download_progress[download_id].get('db_id')
-            if db_id:
-                try:
-                    # Update record in database
-                    Download.update_status(
-                        download_id=db_id,
-                        status="failed"
-                    )
-                except Exception as db_error:
-                    logger.error(f"Error updating download record: {str(db_error)}")
+            # Update download status
+            with downloads_lock:
+                download_progress[download_id]['status'] = 'complete'
+                download_progress[download_id]['filename'] = filename
+                
+                # Update database record if we have one
+                db_id = download_progress[download_id].get('db_id')
+                if db_id:
+                    try:
+                        # Get file size if available
+                        file_size = os.path.getsize(filename) if os.path.exists(filename) else None
+                        
+                        # Calculate download time (estimate)
+                        start_time = download_progress[download_id].get('start_time', time.time() - 30)
+                        download_time = time.time() - start_time
+                        
+                        # Update record in database
+                        Download.update_status(
+                            download_id=db_id,
+                            status="completed",
+                            file_size=file_size,
+                            download_time=download_time
+                        )
+                    except Exception as db_error:
+                        logger.error(f"Error updating download record: {str(db_error)}")
+        
+        except Exception as e:
+            logger.error(f"Download error: {str(e)}")
+            with downloads_lock:
+                download_progress[download_id]['status'] = 'error'
+                download_progress[download_id]['error'] = str(e)
+                
+                # Update database record if we have one
+                db_id = download_progress[download_id].get('db_id')
+                if db_id:
+                    try:
+                        # Update record in database
+                        Download.update_status(
+                            download_id=db_id,
+                            status="failed"
+                        )
+                    except Exception as db_error:
+                        logger.error(f"Error updating download record: {str(db_error)}")
 
 @app.route('/download_status/<download_id>', methods=['GET'])
 def check_download_status(download_id):
