@@ -206,24 +206,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function displayVideoInfo(videoInfo) {
         // Show video info container
-        videoInfoContainer.style.display = 'block';
+        if (videoInfoContainer) {
+            videoInfoContainer.style.display = 'block';
+            
+            // Scroll to video info container with smooth animation
+            videoInfoContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start'
+            });
+        }
         
-        // Scroll to video info container with smooth animation
-        videoInfoContainer.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start'
-        });
-        
-        if (videoInfo.is_playlist) {
+        // Check if this is a playlist
+        if (videoInfo && videoInfo.is_playlist) {
+            // Set global playlist flag
+            isPlaylist = true;
             // Display playlist information
             displayPlaylistInfo(videoInfo);
         } else {
+            // Set global playlist flag to false
+            isPlaylist = false;
             // Display single video information
             displaySingleVideoInfo(videoInfo);
         }
         
         // Auto-select the first video format
-        if (videoInfo.formats && videoInfo.formats.length > 0) {
+        if (videoInfo && videoInfo.formats && videoInfo.formats.length > 0) {
             selectedFormat = videoInfo.formats[0].format_id;
             updateFormatSelection();
         }
@@ -483,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('url', youtubeUrlInput.value.trim());
         formData.append('format', selectedFormat);
         formData.append('type', downloadType);
-        formData.append('playlist', isPlaylist.toString());
+        formData.append('playlist', (isPlaylist === true).toString()); // Add safe boolean check
         
         // Start download request
         fetch('/download', {
@@ -619,11 +626,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Set button text based on download type and playlist status
                 let buttonText = 'Download';
                 
-                if (isPlaylist) {
+                // Make sure isPlaylist is a boolean
+                if (isPlaylist === true) {
                     buttonText += ' Playlist';
                 }
                 
-                if (downloadType === 'audio') {
+                // Check download type
+                if (downloadType && downloadType === 'audio') {
                     buttonText += ' Audio';
                 } else {
                     buttonText += ' Video';
