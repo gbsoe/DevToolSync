@@ -101,7 +101,8 @@ def create_netscape_cookies_file():
     
     # Add each essential cookie to the file
     for name, value in essential_cookies.items():
-        if isinstance(value, requests.cookies.Cookie):
+        # Check if value is a cookie object by checking for required attributes
+        if hasattr(value, 'domain') and hasattr(value, 'path') and hasattr(value, 'secure') and hasattr(value, 'name') and hasattr(value, 'value'):
             # Use the cookie object directly
             domain = f".{value.domain}" if not value.domain.startswith('.') else value.domain
             line = f"{domain}\tTRUE\t{value.path}\t{'TRUE' if value.secure else 'FALSE'}\t{expires}\t{value.name}\t{value.value}"
@@ -117,10 +118,12 @@ def create_netscape_cookies_file():
         # Skip essential cookies that we've already added
         if name in essential_cookies:
             continue
-            
-        domain = f".{cookie.domain}" if not cookie.domain.startswith('.') else cookie.domain
-        line = f"{domain}\tTRUE\t{cookie.path}\t{'TRUE' if cookie.secure else 'FALSE'}\t{expires}\t{cookie.name}\t{cookie.value}"
-        lines.append(line)
+        
+        # Check if this is a proper cookie object with required attributes
+        if hasattr(cookie, 'domain') and hasattr(cookie, 'path') and hasattr(cookie, 'secure') and hasattr(cookie, 'name') and hasattr(cookie, 'value'):
+            domain = f".{cookie.domain}" if not cookie.domain.startswith('.') else cookie.domain
+            line = f"{domain}\tTRUE\t{cookie.path}\t{'TRUE' if cookie.secure else 'FALSE'}\t{expires}\t{cookie.name}\t{cookie.value}"
+            lines.append(line)
     
     # Write file
     content = "\n".join(lines)
