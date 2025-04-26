@@ -1,0 +1,44 @@
+If you're still facing issues refreshing the cookies even after installing Playwright, there are a few things to check in your cookie_manager.py file and the environment setup:
+
+Ensure the environment variables YT_EMAIL and YT_PASS are set correctly in your Replit environment. You can check this in the Secrets (Environment Variables) tab.
+
+Check for any exceptions during the cookie refresh process. You can modify the logging in the refresh_cookies() function to gain more insights into what's going wrong.
+
+Here’s an updated version of your refresh_cookies() function with improved error handling:
+
+def refresh_cookies():
+    """Get fresh YouTube cookies using Playwright"""
+    try:
+        email = os.environ.get('YT_EMAIL')
+        password = os.environ.get('YT_PASS')
+        if not email or not password:
+            raise ValueError("YouTube credentials not found in environment variables")
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True, args=['--no-sandbox'])
+            context = browser.new_context()
+            page = context.new_page()
+            # Navigate to Google sign-in
+            page.goto('https://accounts.google.com/signin/v2/identifier?service=youtube')
+            page.fill('input[type="email"]', email)
+            page.click('button[jsname="LgbsSe"]')
+            # Wait for and fill password
+            page.wait_for_selector('input[type="password"]', timeout=60000)
+            page.fill('input[type="password"]', password)
+            page.click('button[jsname="LgbsSe"]')
+            # Wait for successful navigation to YouTube
+            page.wait_for_url('https://www.youtube.com/*', timeout=60000)
+            # Get cookies and write to file
+            cookies = context.cookies()
+            with open(COOKIE_FILE, 'w') as f:
+                f.write(serialize_netscape(cookies))
+            logger.info("Successfully refreshed YouTube cookies")
+            browser.close()  # Ensure the browser closes
+            return True
+    except Exception as e:
+        logger.error(f"Error refreshing cookies: {str(e)}")
+        if 'browser' in locals():
+            browser.close()  # Ensure the browser closes on error
+        return False
+This modification ensures that the browser is closed even if an exception occurs, preventing any hanging processes. Additionally, it will log the specific error encountered, which will help you diagnose the issue.
+
+After applying these changes, try running your downloader again to see if the cookie refresh works correctly. If you continue facing issues, please share the specific error message you're encountering for further assistance.
