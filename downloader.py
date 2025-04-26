@@ -49,6 +49,15 @@ class YoutubeDownloader:
                 logger.warning(f"Failed to get video info with cookies: {str(e)}")
                 logger.info("Trying without cookies (anonymous access)")
                 
+                # Check for specific error patterns related to restrictions
+                error_str = str(e).lower()
+                if any(restriction in error_str for restriction in [
+                    'sign in to confirm', 'age-restricted', 'private video', 
+                    'this video is not available', 'video unavailable', 'video is private'
+                ]):
+                    # Provide a user-friendly error message
+                    raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                
                 # Try one more time without cookies
                 try:
                     opts.pop('cookiefile', None)
@@ -56,7 +65,16 @@ class YoutubeDownloader:
                         info = ydl.extract_info(url, download=False)
                         logger.info("Successfully retrieved video info anonymously")
                 except Exception as anonymous_error:
-                    raise Exception(f"Failed to get video info: {str(anonymous_error)}")
+                    # Check for specific error patterns in the second attempt as well
+                    error_str = str(anonymous_error).lower()
+                    if any(restriction in error_str for restriction in [
+                        'sign in to confirm', 'age-restricted', 'private video', 
+                        'this video is not available', 'video unavailable', 'video is private'
+                    ]):
+                        # Provide a user-friendly error message
+                        raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                    else:
+                        raise Exception(f"Failed to get video info: {str(anonymous_error)}")
             
             # Filter formats to only include standard resolutions
             if 'formats' in info:
@@ -122,6 +140,16 @@ class YoutubeDownloader:
                     return downloaded_file
             except Exception as cookie_error:
                 logger.warning(f"Failed to download with cookies: {str(cookie_error)}")
+                
+                # Check for specific error patterns related to restrictions
+                error_str = str(cookie_error).lower()
+                if any(restriction in error_str for restriction in [
+                    'sign in to confirm', 'age-restricted', 'private video', 
+                    'this video is not available', 'video unavailable', 'video is private'
+                ]):
+                    # Provide a user-friendly error message
+                    raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                
                 logger.info("Trying without cookies (anonymous access)")
                 
                 # Try one more time without cookies
@@ -133,7 +161,16 @@ class YoutubeDownloader:
                         logger.info(f"Successfully downloaded video anonymously to {downloaded_file}")
                         return downloaded_file
                 except Exception as anonymous_error:
-                    raise Exception(f"Failed to download video: {str(anonymous_error)}")
+                    # Check for specific error patterns in the second attempt as well
+                    error_str = str(anonymous_error).lower()
+                    if any(restriction in error_str for restriction in [
+                        'sign in to confirm', 'age-restricted', 'private video', 
+                        'this video is not available', 'video unavailable', 'video is private'
+                    ]):
+                        # Provide a user-friendly error message
+                        raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                    else:
+                        raise Exception(f"Failed to download video: {str(anonymous_error)}")
                 
         except Exception as e:
             logger.error(f"Error downloading video: {str(e)}")
@@ -194,6 +231,16 @@ class YoutubeDownloader:
                     return downloaded_file
             except Exception as cookie_error:
                 logger.warning(f"Failed to download audio with cookies: {str(cookie_error)}")
+                
+                # Check for specific error patterns related to restrictions
+                error_str = str(cookie_error).lower()
+                if any(restriction in error_str for restriction in [
+                    'sign in to confirm', 'age-restricted', 'private video', 
+                    'this video is not available', 'video unavailable', 'video is private'
+                ]):
+                    # Provide a user-friendly error message
+                    raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                
                 logger.info("Trying without cookies (anonymous access)")
                 
                 # Try one more time without cookies
@@ -205,7 +252,16 @@ class YoutubeDownloader:
                         logger.info(f"Successfully downloaded audio anonymously to {downloaded_file}")
                         return downloaded_file
                 except Exception as anonymous_error:
-                    raise Exception(f"Failed to download audio: {str(anonymous_error)}")
+                    # Check for specific error patterns in the second attempt as well
+                    error_str = str(anonymous_error).lower()
+                    if any(restriction in error_str for restriction in [
+                        'sign in to confirm', 'age-restricted', 'private video', 
+                        'this video is not available', 'video unavailable', 'video is private'
+                    ]):
+                        # Provide a user-friendly error message
+                        raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                    else:
+                        raise Exception(f"Failed to download audio: {str(anonymous_error)}")
                 
         except Exception as e:
             logger.error(f"Error downloading audio: {str(e)}")
