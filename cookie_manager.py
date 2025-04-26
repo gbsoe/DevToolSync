@@ -35,30 +35,38 @@ def refresh_cookies():
             context = browser.new_context()
             page = context.new_page()
             
-            # Navigate to Google sign-in
+            logger.info("Navigating to Google sign-in page...")
             page.goto('https://accounts.google.com/signin/v2/identifier?service=youtube')
+            
+            logger.info("Entering email...")
             page.fill('input[type="email"]', email)
             page.click('button[jsname="LgbsSe"]')
             
-            # Wait for and fill password
+            logger.info("Waiting for password field...")
             page.wait_for_selector('input[type="password"]', timeout=60000)
+            
+            logger.info("Entering password...")
             page.fill('input[type="password"]', password)
             page.click('button[jsname="LgbsSe"]')
             
-            # Wait for successful navigation to YouTube
+            logger.info("Waiting for YouTube navigation...")
             page.wait_for_url('https://www.youtube.com/*', timeout=60000)
-            cookies = context.cookies()
-            browser.close()
-
-        # Save cookies to file
-        with open(COOKIE_FILE, 'w') as f:
-            f.write(serialize_netscape(cookies))
             
-        logger.info("Successfully refreshed YouTube cookies")
-        return True
+            logger.info("Getting cookies...")
+            cookies = context.cookies()
+            
+            logger.info("Writing cookies to file...")
+            with open(COOKIE_FILE, 'w') as f:
+                f.write(serialize_netscape(cookies))
+            
+            logger.info("Successfully refreshed YouTube cookies")
+            browser.close()
+            return True
 
     except Exception as e:
         logger.error(f"Error refreshing cookies: {str(e)}")
+        if 'browser' in locals():
+            browser.close()
         return False
 
 def ensure_fresh_cookies():
