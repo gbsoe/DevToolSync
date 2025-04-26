@@ -2,6 +2,8 @@ import logging
 import os
 import yt_dlp
 
+from cookie_manager import ensure_fresh_cookies
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -11,9 +13,6 @@ class YoutubeDownloader:
             'quiet': True,
             'no_warnings': True,
             'extract_flat': True,
-            # Use default browser cookies - this is the key change
-            # Using this approach means we don't need a separate cookie manager
-            'cookiesfrombrowser': ('chrome', ),  # Try Chrome first
             'skip_download': False,
             'format_sort': [
                 'res:1080p',
@@ -33,53 +32,31 @@ class YoutubeDownloader:
         try:
             logger.info(f"Getting video info for: {url}")
             
+            # Ensure we have fresh cookies
+            if not ensure_fresh_cookies():
+                logger.warning("Could not refresh cookies, will try to continue without them")
+            
             # Create a copy of base options and add any specific options
             opts = self.base_opts.copy()
+            opts['cookiefile'] = 'cookies.txt'
             
-            # Try multiple browser cookie sources if available
-            browser_options = [
-                ('chrome', ),
-                ('firefox', ),
-                ('edge', ),
-                ('brave', ),
-                ('opera', ),
-                ('safari', ),
-                # No browser cookies - anonymous access
-                None
-            ]
-            
-            info = None
-            error_messages = []
-            
-            # Try different browser cookies until one works
-            for browser_opt in browser_options:
+            # Try to get video info with cookies
+            try:
+                with yt_dlp.YoutubeDL(opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    logger.info("Successfully retrieved video info using cookies")
+            except Exception as e:
+                logger.warning(f"Failed to get video info with cookies: {str(e)}")
+                logger.info("Trying without cookies (anonymous access)")
+                
+                # Try one more time without cookies
                 try:
-                    if browser_opt:
-                        logger.info(f"Trying to get video info with {browser_opt[0]} cookies")
-                        opts['cookiesfrombrowser'] = browser_opt
-                    else:
-                        # Use anonymous access
-                        logger.info("Trying anonymous access without browser cookies")
-                        if 'cookiesfrombrowser' in opts:
-                            del opts['cookiesfrombrowser']
-                    
+                    opts.pop('cookiefile', None)
                     with yt_dlp.YoutubeDL(opts) as ydl:
                         info = ydl.extract_info(url, download=False)
-                        
-                        # If we got here without an error, break the loop
-                        if info:
-                            logger.info(f"Successfully retrieved video info using {'anonymous' if not browser_opt else browser_opt[0]}")
-                            break
-                            
-                except Exception as e:
-                    error_message = str(e)
-                    error_messages.append(f"Error with {browser_opt}: {error_message}")
-                    logger.warning(f"Failed to get video info using {'anonymous' if not browser_opt else browser_opt[0]}: {error_message}")
-                    # Continue to try the next option
-            
-            # If we didn't get any info after trying all options, raise an error
-            if not info:
-                raise Exception(f"Failed to get video info with any browser cookies or anonymously. Errors: {'; '.join(error_messages)}")
+                        logger.info("Successfully retrieved video info anonymously")
+                except Exception as anonymous_error:
+                    raise Exception(f"Failed to get video info: {str(anonymous_error)}")
             
             # Filter formats to only include standard resolutions
             if 'formats' in info:
@@ -97,6 +74,10 @@ class YoutubeDownloader:
     def download_video(self, url, format_id='best', output_path=None, progress_hook=None, playlist=False):
         try:
             logger.info(f"Starting video download for URL: {url} with format: {format_id}")
+            
+            # Ensure we have fresh cookies
+            if not ensure_fresh_cookies():
+                logger.warning("Could not refresh cookies, will try to continue without them")
             
             def combined_progress_hook(d):
                 if d['status'] == 'downloading':
@@ -120,62 +101,39 @@ class YoutubeDownloader:
                     if progress_hook:
                         progress_hook(d)
             
-            # Base options with browser cookies
+            # Base options with cookies
             options = {
-                'cookiesfrombrowser': ('chrome', ),  # Default to Chrome
                 'format': format_id,
                 'progress_hooks': [combined_progress_hook],
                 'outtmpl': '%(title)s.%(ext)s',
-                'verbose': True
+                'verbose': True,
+                'cookiefile': 'cookies.txt'
             }
             
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
             
-            # Try multiple browser cookie sources if available
-            browser_options = [
-                ('chrome', ),
-                ('firefox', ),
-                ('edge', ),
-                ('brave', ),
-                ('opera', ),
-                ('safari', ),
-                None  # Try without cookies as a last resort
-            ]
-            
-            error_messages = []
-            downloaded_file = None
-            
-            # Try different browser cookies until one works
-            for browser_opt in browser_options:
+            # Try to download with cookies first
+            try:
+                with yt_dlp.YoutubeDL(options) as ydl:
+                    info = ydl.extract_info(url, download=True)
+                    downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                    logger.info(f"Successfully downloaded video to {downloaded_file}")
+                    return downloaded_file
+            except Exception as cookie_error:
+                logger.warning(f"Failed to download with cookies: {str(cookie_error)}")
+                logger.info("Trying without cookies (anonymous access)")
+                
+                # Try one more time without cookies
                 try:
-                    download_options = options.copy()
-                    
-                    if browser_opt:
-                        logger.info(f"Trying to download with {browser_opt[0]} cookies")
-                        download_options['cookiesfrombrowser'] = browser_opt
-                    else:
-                        # Use anonymous access
-                        logger.info("Trying anonymous download without browser cookies")
-                        if 'cookiesfrombrowser' in download_options:
-                            del download_options['cookiesfrombrowser']
-                    
-                    with yt_dlp.YoutubeDL(download_options) as ydl:
+                    options.pop('cookiefile', None)
+                    with yt_dlp.YoutubeDL(options) as ydl:
                         info = ydl.extract_info(url, download=True)
-                        if info:
-                            downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
-                            logger.info(f"Successfully downloaded video to {downloaded_file}")
-                            return downloaded_file
-                            
-                except Exception as e:
-                    error_message = str(e)
-                    error_messages.append(f"Error with {browser_opt}: {error_message}")
-                    logger.warning(f"Failed to download using {'anonymous' if not browser_opt else browser_opt[0]}: {error_message}")
-                    # Continue to try the next option
-            
-            # If we didn't successfully download with any method, raise an error
-            if not downloaded_file:
-                raise Exception(f"Failed to download video with any browser cookies or anonymously. Errors: {'; '.join(error_messages)}")
+                        downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                        logger.info(f"Successfully downloaded video anonymously to {downloaded_file}")
+                        return downloaded_file
+                except Exception as anonymous_error:
+                    raise Exception(f"Failed to download video: {str(anonymous_error)}")
                 
         except Exception as e:
             logger.error(f"Error downloading video: {str(e)}")
@@ -184,6 +142,10 @@ class YoutubeDownloader:
     def download_audio(self, url, output_path=None, progress_hook=None, playlist=False):
         try:
             logger.info(f"Starting audio download for URL: {url}")
+            
+            # Ensure we have fresh cookies
+            if not ensure_fresh_cookies():
+                logger.warning("Could not refresh cookies, will try to continue without them")
             
             def combined_progress_hook(d):
                 if d['status'] == 'downloading':
@@ -209,7 +171,6 @@ class YoutubeDownloader:
             
             # Base options with audio extraction
             options = {
-                'cookiesfrombrowser': ('chrome', ),  # Default to Chrome
                 'format': 'bestaudio/best',
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
@@ -217,56 +178,34 @@ class YoutubeDownloader:
                 }],
                 'progress_hooks': [combined_progress_hook],
                 'outtmpl': '%(title)s.%(ext)s',
-                'verbose': True
+                'verbose': True,
+                'cookiefile': 'cookies.txt'
             }
             
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
             
-            # Try multiple browser cookie sources if available
-            browser_options = [
-                ('chrome', ),
-                ('firefox', ),
-                ('edge', ),
-                ('brave', ),
-                ('opera', ),
-                ('safari', ),
-                None  # Try without cookies as a last resort
-            ]
-            
-            error_messages = []
-            downloaded_file = None
-            
-            # Try different browser cookies until one works
-            for browser_opt in browser_options:
+            # Try to download with cookies first
+            try:
+                with yt_dlp.YoutubeDL(options) as ydl:
+                    info = ydl.extract_info(url, download=True)
+                    downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                    logger.info(f"Successfully downloaded audio to {downloaded_file}")
+                    return downloaded_file
+            except Exception as cookie_error:
+                logger.warning(f"Failed to download audio with cookies: {str(cookie_error)}")
+                logger.info("Trying without cookies (anonymous access)")
+                
+                # Try one more time without cookies
                 try:
-                    download_options = options.copy()
-                    
-                    if browser_opt:
-                        logger.info(f"Trying to download audio with {browser_opt[0]} cookies")
-                        download_options['cookiesfrombrowser'] = browser_opt
-                    else:
-                        # Use anonymous access
-                        logger.info("Trying anonymous audio download without browser cookies")
-                        if 'cookiesfrombrowser' in download_options:
-                            del download_options['cookiesfrombrowser']
-                    
-                    with yt_dlp.YoutubeDL(download_options) as ydl:
+                    options.pop('cookiefile', None)
+                    with yt_dlp.YoutubeDL(options) as ydl:
                         info = ydl.extract_info(url, download=True)
-                        if info:
-                            downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
-                            logger.info(f"Successfully downloaded audio to {downloaded_file}")
-                            return downloaded_file
-                            
-                except Exception as e:
-                    error_message = str(e)
-                    error_messages.append(f"Error with {browser_opt}: {error_message}")
-                    logger.warning(f"Failed to download audio using {'anonymous' if not browser_opt else browser_opt[0]}: {error_message}")
-                    # Continue to try the next option
-            
-            # If we didn't successfully download with any method, raise an error
-            if not downloaded_file:
-                raise Exception(f"Failed to download audio with any browser cookies or anonymously. Errors: {'; '.join(error_messages)}")
+                        downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                        logger.info(f"Successfully downloaded audio anonymously to {downloaded_file}")
+                        return downloaded_file
+                except Exception as anonymous_error:
+                    raise Exception(f"Failed to download audio: {str(anonymous_error)}")
                 
         except Exception as e:
             logger.error(f"Error downloading audio: {str(e)}")
