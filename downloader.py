@@ -49,8 +49,10 @@ class YoutubeDownloader:
 
     def download_video(self, url, format_id='best', output_path=None, progress_hook=None, playlist=False):
         try:
+            logger.info(f"Starting download process for URL: {url} with format: {format_id}")
             if not ensure_fresh_cookies():
                 raise Exception("Failed to refresh YouTube cookies")
+            logger.info("Cookies validated successfully")
             
             def combined_progress_hook(d):
                 logger.info(f"Download progress: {d}")

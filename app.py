@@ -14,8 +14,10 @@ from cache_manager import CacheManager
 from models import db, Download, Statistics
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, 
+logging.basicConfig(level=logging.INFO, 
                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
@@ -99,6 +101,8 @@ def download_video():
     download_type = request.form.get('type', 'video')
     playlist = request.form.get('playlist', 'false') == 'true'
     video_title = request.form.get('title', 'Unknown Video')
+    
+    logger.info(f"Received download request - URL: {url}, Format: {format_id}, Type: {download_type}")
     
     # Log the request details for debugging
     logger.info(f"Download request: url={url}, format={format_id}, type={download_type}")
