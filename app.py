@@ -182,9 +182,9 @@ def process_download(download_id, url, format_id, download_type, playlist):
             
             # Define progress callback function
             def progress_hook(d):
-            if d['status'] == 'downloading':
-                try:
-                    total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
+                if d['status'] == 'downloading':
+                    try:
+                        total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
                     downloaded = d.get('downloaded_bytes', 0)
                     
                     if total > 0:
