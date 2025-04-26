@@ -21,14 +21,13 @@ def create_netscape_cookies_file():
     # Format: domain flag path secure expiry name value
     expires = str(int(time.time() + 3600 * 24 * 7))  # Default 1 week
     
-    # These are some common YouTube cookies that allow basic functionality
-    # Note: All domains must start with a dot for third-party cookies
+    # These are some common YouTube cookies formatted according to Netscape spec
     cookies = [
-        (".youtube.com", "FALSE", "/", "TRUE", expires, "CONSENT", "YES+cb"),
-        (".youtube.com", "FALSE", "/", "TRUE", expires, "VISITOR_INFO1_LIVE", "y1OUdbXCbS4"),
-        (".youtube.com", "FALSE", "/", "TRUE", expires, "YSC", "aaaaaaaaaaa"),
-        (".youtube.com", "FALSE", "/", "TRUE", expires, "PREF", "f4=4000000&f6=40000000&hl=en"),
-        (".youtube.com", "FALSE", "/", "TRUE", expires, "GPS", "1")
+        (".youtube.com", "TRUE", "/", "FALSE", expires, "CONSENT", "YES+cb"),
+        (".youtube.com", "TRUE", "/", "FALSE", expires, "VISITOR_INFO1_LIVE", "y1OUdbXCbS4"),
+        (".youtube.com", "TRUE", "/", "FALSE", expires, "YSC", "aaaaaaaaaaa"),
+        (".youtube.com", "TRUE", "/", "FALSE", expires, "PREF", "f4=4000000"),
+        (".youtube.com", "TRUE", "/", "FALSE", expires, "GPS", "1")
     ]
     
     # Add each cookie to the file content
@@ -47,7 +46,7 @@ def create_netscape_cookies_file():
             for cookie in session.cookies:
                 # Ensure domain starts with a dot
                 domain = f".{cookie.domain}" if not cookie.domain.startswith('.') else cookie.domain
-                line = f"{domain}\tFALSE\t{cookie.path}\t{'TRUE' if cookie.secure else 'FALSE'}\t{expires}\t{cookie.name}\t{cookie.value}"
+                line = f"{domain}\tTRUE\t{cookie.path}\t{'TRUE' if cookie.secure else 'FALSE'}\t{expires}\t{cookie.name}\t{cookie.value}"
                 lines.append(line)
             logger.info("Added cookies from live YouTube request")
     except Exception as e:
