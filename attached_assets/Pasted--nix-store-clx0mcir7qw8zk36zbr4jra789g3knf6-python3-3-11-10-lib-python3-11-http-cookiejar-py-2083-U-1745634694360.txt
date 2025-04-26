@@ -1,0 +1,87 @@
+/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/cookiejar.py:2083: UserWarning: http.cookiejar bug!
+Traceback (most recent call last):
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/cookiejar.py", line 2056, in _really_load
+    assert domain_specified == initial_dot
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+  _warn_unhandled_exception()
+ERROR: invalid Netscape format cookies file 'cookies.txt': 'youtube.com\tTRUE\t/\tTRUE\t1746239453\tSID\tageaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/cookiejar.py:2083: UserWarning: http.cookiejar bug!
+Traceback (most recent call last):
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/cookiejar.py", line 2056, in _really_load
+    assert domain_specified == initial_dot
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/cookies.py", line 108, in load_cookies
+    jar.load()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/cookies.py", line 1356, in load
+    self._really_load(cf, filename, ignore_discard, ignore_expires)
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/cookiejar.py", line 2084, in _really_load
+    raise LoadError("invalid Netscape format cookies file %r: %r" %
+http.cookiejar.LoadError: invalid Netscape format cookies file 'cookies.txt': 'youtube.com\tTRUE\t/\tTRUE\t1746239453\tSID\tageaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py", line 4132, in cookiejar
+    return load_cookies(
+           ^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/cookies.py", line 113, in load_cookies
+    raise CookieLoadError('failed to load cookies')
+yt_dlp.cookies.CookieLoadError: failed to load cookies
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/downloader.py", line 27, in get_video_info
+    info = ydl.extract_info(url, download=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py", line 1642, in extract_info
+    return self.__extract_info(url, self.get_info_extractor(key), download, extra_info, process)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py", line 1653, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py", line 1788, in __extract_info
+    ie_result = ie.extract(url)
+                ^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/extractor/common.py", line 745, in extract
+    self.initialize()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/extractor/common.py", line 654, in initialize
+    self._real_initialize()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/extractor/youtube/_base.py", line 480, in _real_initialize
+    self._initialize_pref()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/extractor/youtube/_base.py", line 463, in _initialize_pref
+    cookies = self._get_cookies('https://www.youtube.com/')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/extractor/common.py", line 3640, in _get_cookies
+    return LenientSimpleCookie(self._downloader.cookiejar.get_cookie_header(url))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/functools.py", line 1001, in __get__
+    val = self.func(instance)
+          ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py", line 4137, in cookiejar
+    self.report_error(str(cause), tb=''.join(traceback.format_exception(None, cause, cause.__traceback__)))
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py", line 1111, in report_error
+    self.trouble(f'{self._format_err("ERROR:", self.Styles.ERROR)} {message}', *args, **kwargs)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py", line 1050, in trouble
+    raise DownloadError(message, exc_info)
+yt_dlp.utils.DownloadError: ERROR: invalid Netscape format cookies file 'cookies.txt': 'youtube.com\tTRUE\t/\tTRUE\t1746239453\tSID\tageaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/cookiejar.py", line 2056, in _really_load
+    assert domain_specified == initial_dot
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+  _warn_unhandled_exception()
+ERROR: invalid Netscape format cookies file 'cookies.txt': 'youtube.com\tTRUE\t/\tTRUE\t1746239453\tSID\tageaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+ERROR:downloader:Error getting video info: ERROR: invalid Netscape format cookies file 'cookies.txt': 'youtube.com\tTRUE\t/\tTRUE\t1746239453\tSID\tageaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+ERROR:app:Error getting video info: ERROR: invalid Netscape format cookies file 'cookies.txt': 'youtube.com\tTRUE\t/\tTRUE\t1746239453\tSID\tageaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
