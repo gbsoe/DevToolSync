@@ -100,6 +100,9 @@ def download_video():
     playlist = request.form.get('playlist', 'false') == 'true'
     video_title = request.form.get('title', 'Unknown Video')
     
+    # Log the request details for debugging
+    logger.info(f"Download request: url={url}, format={format_id}, type={download_type}")
+    
     if not url:
         flash('Please enter a valid YouTube URL', 'danger')
         return redirect(url_for('index'))

@@ -66,10 +66,20 @@ class YoutubeDownloader:
                                 d['_percent_str'] = f'{percent:.1f}%'
                                 d['_speed_str'] = f'{speed/1024/1024:.1f} MB/s'
                                 d['_eta_str'] = f'{eta} seconds'
+                            # Ensure we always call the progress hook with percentage
+                            if progress_hook:
+                                d['progress'] = percent
+                                progress_hook(d)
                     except Exception as e:
                         logger.error(f"Error calculating progress: {e}")
-                if progress_hook:
-                    progress_hook(d)
+                elif d['status'] == 'finished':
+                    if progress_hook:
+                        d['progress'] = 100
+                        progress_hook(d)
+                elif d['status'] == 'error':
+                    logger.error(f"Download error: {d.get('error')}")
+                    if progress_hook:
+                        progress_hook(d)
                     
             options = {
                 'format': format_id,
