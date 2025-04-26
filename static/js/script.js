@@ -558,9 +558,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             downloadButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Download Complete';
                             
                             // Ensure download link is clickable
-                            downloadLink.classList.add('btn', 'btn-primary', 'mt-2');
+                            downloadLink.classList.add('btn', 'btn-primary', 'mt-2', 'me-2');
                             downloadLink.innerHTML = '<i class="bi bi-download me-2"></i>Download File';
                             downloadLink.onclick = null; // Remove any previous handlers
+
+                            // Add direct link button
+                            const directLinkBtn = document.createElement('a');
+                            directLinkBtn.href = status.download_url;
+                            directLinkBtn.className = 'btn btn-secondary mt-2';
+                            directLinkBtn.innerHTML = '<i class="bi bi-link-45deg me-2"></i>Direct Link';
+                            directLinkBtn.target = '_blank';
+                            downloadCompleteAlert.appendChild(directLinkBtn);
                         }
                         
                         if (status.status === 'error') {
