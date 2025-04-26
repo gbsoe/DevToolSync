@@ -1,0 +1,66 @@
+when i click download video, i check the console and there is no info that any api's are working or literally anything, no error, no progress, nothing happens when theyre supposed to
+
+HB
+
+honeybendi
+Assistant
+1 minute ago
+To troubleshoot the issue where no information or errors appear in the console when you try to download a video, we need to ensure that the API requests are being handled properly and that any relevant callbacks or logging are engaged. Here's what you should check and possibly modify in your code:
+
+Check Flask Logging: Make sure the logging level in app.py is set to DEBUG to capture more detailed information. Update your logging configuration at the top of app.py if necessary:
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+Ensure Proper API Handling: Make sure the /download route processes the request correctly and logs the relevant details. Below is an example of what the download method might look like in your app.py:
+
+@app.route('/download', methods=['POST'])
+def download_video():
+    """Download a YouTube video or audio"""
+    url = request.form.get('url', '')
+    format_id = request.form.get('format', 'best')
+    download_type = request.form.get('type', 'video')
+    playlist = request.form.get('playlist', 'false') == 'true'
+    video_title = request.form.get('title', 'Unknown Video')
+    
+    # Log the request details for debugging
+    logger.info(f"Download request: url={url}, format={format_id}, type={download_type}")
+    
+    if not url:
+        flash('Please enter a valid YouTube URL', 'danger')
+        return redirect(url_for('index'))
+    
+    try:
+        # Generate a unique ID for this download
+        download_id = str(int(time.time() * 1000))
+        with downloads_lock:
+            download_progress[download_id] = {
+                'progress': 0,
+                'status': 'starting',
+                'filename': None,
+                'db_id': None,  # Will store database record ID
+                'start_time': time.time()  # Track when download started
+            }
+        
+        # Record download in database (if applicable)
+        # Log if database recording is active or required
+        logger.debug(f"Recording download for URL: {url} in database")
+        # Here you might call your download logic from the `YoutubeDownloader`
+        # e.g., downloader.download_video(url, format_id=..., ...)
+        # Below is a placeholder call; replace with your actual logic:
+        logger.debug("Starting the download process...")
+        if downloader.download_video(url, format_id):
+            logger.info('Download initiated successfully.')
+        else:
+            logger.error('Failed to initiate download.')
+        return jsonify({'status': 'success', 'download_id': download_id}), 200
+    
+    except Exception as e:
+        logger.error(f"Error during download: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+Monitor the Progress Hook: In your downloader.py, ensure that the progress hook is functioning correctly. In particular, the combined_progress_hook function must call back any subscriber listeners with updates. This is how you are currently handling it, but ensure it is actively being called.
+
+Debug on Frontend Side: Check the network tab in your browser's developer tools to see if the API requests are hitting the backend and what responses (if any) are coming back. Make sure that the AJAX requests being made from script.js correctly correspond to the API endpoints.
+
+Check Console and Network Logs: If still nothing happens, consider adding temporary log statements or inspecting the output inside both your Flask application and on the client side (browser console) to help diagnose where it might be failing.
+
+After making these checks and updates, try the download action again. Look at your console and any logging output to identify what may be going wrong. If it continues to be an issue, please share any logs or responses you're seeing for further assistance.
