@@ -13,5 +13,3 @@ yt-dlp
 browser-cookie3
 playwright
 trafilatura
-flask
-pytube
