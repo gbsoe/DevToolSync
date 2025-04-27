@@ -33,7 +33,7 @@
                     <h3 class="h5 mb-0">Download Any YouTube Video or Audio Now</h3>
                 </div>
                 <div class="card-body">
-                    <form id="youtube-form" method="GET" action="javascript:void(0);" onsubmit="processYoutubeURL(event)" aria-label="YouTube downloader form">
+                    <form id="youtube-form" method="GET" action="/" onsubmit="return processVideoURL(event)" aria-label="YouTube downloader form">
                         <div class="url-input-container mb-4">
                             <label for="youtube-url" class="form-label">Enter YouTube URL</label>
                             <input type="url" class="form-control form-control-lg" id="youtube-url" name="url"
@@ -457,8 +457,8 @@
 
 {% block extra_js %}
 <script>
-    // Function to process YouTube URL and redirect directly to the watch page
-    function processYoutubeURL(event) {
+    // Function to process YouTube URL and redirect directly to the download page (2-page process)
+    function processVideoURL(event) {
         event.preventDefault();
         
         // Show loader
@@ -474,7 +474,7 @@
         
         if (!youtubeUrl) {
             displayError('Please enter a valid YouTube URL');
-            return;
+            return false;
         }
         
         // Simple regex to extract video ID
@@ -484,7 +484,7 @@
         if (!videoId) {
             displayError('Could not extract video ID from the URL. Please check the URL and try again.');
             if (loader) loader.style.display = 'none';
-            return;
+            return false;
         }
         
         // Get the format and type
@@ -493,6 +493,7 @@
         
         // Redirect directly to the watch page (this is what makes it a 2-page process)
         window.location.href = `/watch?v=${videoId}&format=${formatId}&type=${downloadType}`;
+        return false; // Prevent normal form submission
     }
     
     // Helper function to display errors
@@ -512,5 +513,16 @@
         const loader = document.getElementById('video-loader');
         if (loader) loader.style.display = 'none';
     }
+
+    // Add an event listener to enable direct URL submission
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attach to form submission
+        const form = document.getElementById('youtube-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                return processVideoURL(e);
+            });
+        }
+    });
 </script>
 {% endblock %}

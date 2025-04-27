@@ -248,6 +248,19 @@
                     <h5><i class="bi bi-check-circle me-2"></i> You're All Set!</h5>
                     <p>Click any format above to download directly. Your file will begin downloading immediately - no third page or extra steps required!</p>
                 </div>
+                
+                <!-- One-click download button -->
+                <div class="mt-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Quick Download</h5>
+                            <p class="card-text">Start your download instantly with one click</p>
+                            <a href="{{ video_formats[0].download_url if video_formats else '#' }}" download class="btn btn-lg btn-success direct-download-btn">
+                                <i class="bi bi-download me-2"></i>Download Now ({{ video_formats[0].format if video_formats else 'MP4' }})
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="mt-4 text-center">
@@ -397,6 +410,34 @@
         menuDownloadOption.innerHTML = `
             <i class="bi bi-download"></i> Download Now
         `;
+    }
+    
+    // Handle the direct download button specially
+    const directDownloadBtn = document.querySelector('.direct-download-btn');
+    if (directDownloadBtn) {
+        const originalUrl = directDownloadBtn.getAttribute('href');
+        if (originalUrl && originalUrl !== '#') {
+            const videoTitle = "{{ title | default('youtube_video') }}";
+            const safeTitle = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const fileName = `${safeTitle}.mp4`;
+            
+            directDownloadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Show success toast message
+                showSuccessToast("Starting your download...");
+                
+                if (hasAdvancedDownloadSupport) {
+                    // Use our advanced download with progress
+                    fetchAndDownloadFile(originalUrl, fileName, (progress) => {
+                        console.log(`Download progress: ${progress}%`);
+                    });
+                } else {
+                    // For legacy browsers
+                    window.location.href = originalUrl;
+                }
+            });
+        }
     }
 </script>
 {% endblock %}

@@ -73,6 +73,7 @@ def direct_download():
     format_id = request.args.get('format', '18')  # Default to medium quality
     download_type = request.args.get('type', 'video')  # Default to video
     timestamp = request.args.get('_t', '')  # Timestamp to avoid caching
+    skip_redirect = request.args.get('skip_redirect', 'false') == 'true'  # Skip the redirection to direct URL
     
     if not video_id:
         flash("No video ID provided", 'danger')
@@ -143,7 +144,16 @@ def direct_download():
         # Set the appropriate extension
         extension = 'mp4' if download_type == 'video' else 'mp3'
         
-        # Create appropriate headers for direct download
+        # If we're skipping the redirect, return the direct URL as JSON
+        if skip_redirect:
+            return jsonify({
+                'direct_url': direct_url,
+                'filename': f"{safe_title}.{extension}",
+                'format': format_id,
+                'type': download_type
+            })
+        
+        # Otherwise, create appropriate headers for direct download
         # These headers will tell the browser this is a file download
         response = make_response(redirect(direct_url))
         response.headers['Content-Type'] = 'application/octet-stream'
