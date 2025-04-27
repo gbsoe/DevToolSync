@@ -28,6 +28,12 @@ app.secret_key = os.environ.get("SESSION_SECRET", "youtube_downloader_secret")
 database_url = os.environ.get("DATABASE_URL")
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+# If database_url is None, provide a default SQLite database path
+if not database_url:
+    database_url = "sqlite:///youtube_downloader.db"
+    logger.warning("DATABASE_URL not found, using SQLite as fallback")
+
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -702,9 +708,9 @@ def download_file():
         logger.info(f"Making request to: {direct_url[:50]}...")
         
         # Fix for Replit's proxy issue: Instead of streaming through Flask,
-        # redirect the user directly to the source URL with proper download headers
-        # This avoids Replit's proxy issues in production
+        # we need to handle this differently for production vs. development
         from urllib.parse import urlparse
+        import requests
         
         # Make sure the URL is valid and properly formatted
         parsed_url = urlparse(direct_url)
@@ -713,7 +719,7 @@ def download_file():
             flash("Error: Could not generate a valid download link", "danger")
             return redirect('/')
         
-        # Record download statistics before redirecting
+        # Record download statistics before handling the download
         Statistics.record_download(download_type)
         
         # Check if we're in a redirect loop (direct_url pointing to our own domain)
@@ -721,16 +727,63 @@ def download_file():
             logger.error(f"Detected redirect loop to Replit domain: {parsed_url.netloc}")
             flash("Error: Download redirect loop detected. Please try again.", "warning")
             return redirect(f'/watch?v={video_id}')
+            
+        # Detect if we're running in a production environment (Replit deploy)
+        is_production = 'REPL_ID' in os.environ and 'REPL_OWNER' in os.environ
+        logger.info(f"Running in {'production' if is_production else 'development'} environment")
         
-        # Log and redirect to the direct URL
-        logger.info(f"Redirecting to direct download URL: {direct_url[:50]}...")
-        
-        # Create a redirect response with download headers
-        response = redirect(direct_url, code=302)
-        response.headers['Content-Type'] = mime_type
-        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-        
-        return response
+        if is_production:
+            # In production, we need to proxy the content rather than redirecting
+            # This prevents the browser from receiving HTML instead of the file
+            try:
+                logger.info(f"Production mode: Proxying content from {direct_url[:50]}...")
+                
+                # Stream the remote content through our server
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Referer': 'https://www.youtube.com/'
+                }
+                
+                remote_response = requests.get(direct_url, headers=headers, stream=True)
+                
+                if remote_response.status_code != 200:
+                    logger.error(f"Error from YouTube API: Status {remote_response.status_code}")
+                    flash("Error retrieving video content from YouTube. Please try again.", "danger")
+                    return redirect(f'/watch?v={video_id}')
+                
+                # Create a streaming response
+                def generate():
+                    for chunk in remote_response.iter_content(chunk_size=4096):
+                        yield chunk
+                
+                # Return a streaming response
+                response = Response(generate(), remote_response.status_code)
+                
+                # Copy relevant headers
+                for header in ['Content-Type', 'Content-Length']:
+                    if header in remote_response.headers:
+                        response.headers[header] = remote_response.headers[header]
+                
+                # Set download headers
+                response.headers['Content-Type'] = mime_type
+                response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+                
+                return response
+                
+            except Exception as proxy_error:
+                logger.error(f"Error proxying content: {str(proxy_error)}")
+                flash(f"Error: {str(proxy_error)}", "danger")
+                return redirect(f'/watch?v={video_id}')
+        else:
+            # In development, redirect to the direct URL (works fine locally)
+            logger.info(f"Development mode: Redirecting to direct URL: {direct_url[:50]}...")
+            
+            # Create a redirect response with download headers
+            response = redirect(direct_url, code=302)
+            response.headers['Content-Type'] = mime_type
+            response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            return response
         
     except Exception as e:
         error_msg = str(e).lower()
