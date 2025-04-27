@@ -423,7 +423,7 @@ def watch_video():
                     'format': format.get('format', f"Video {format.get('resolution', '360p')}"),
                     'format_id': format.get('format_id', '18'),
                     'size': size_str,
-                    'download_url': generate_clipto_url(url, format.get('format_id', '18'))
+                    'download_url': generate_download_file_url(url, format.get('format_id', '18'))
                 })
         
         audio_formats = []
@@ -436,7 +436,7 @@ def watch_video():
                     'format': format.get('format', f"Audio {format.get('abr', '128kbps')}"),
                     'format_id': format.get('format_id', '140'),
                     'size': size_str,
-                    'download_url': generate_clipto_url(url, format.get('format_id', '140'), 'audio')
+                    'download_url': generate_download_file_url(url, format.get('format_id', '140'), 'audio')
                 })
         
         # Format the video duration
@@ -451,9 +451,9 @@ def watch_video():
         
         # Get the primary download URL for the requested format
         if download_type == 'audio':
-            primary_download_url = generate_clipto_url(url, format_id, 'audio')
+            primary_download_url = generate_download_file_url(url, format_id, 'audio')
         else:
-            primary_download_url = generate_clipto_url(url, format_id)
+            primary_download_url = generate_download_file_url(url, format_id)
             
         # Create an embed URL (can't directly embed YouTube videos, but we'll use a workaround)
         embed_url = f"https://www.youtube.com/embed/{video_id}?autoplay=1&controls=1&rel=0"
@@ -617,6 +617,100 @@ def service_worker():
     response.headers['Service-Worker-Allowed'] = '/'
     response.headers['Cache-Control'] = 'no-cache'
     return response
+    
+@app.route('/download-file')
+def download_file():
+    """Direct file download endpoint - this serves the actual file content instead of HTML"""
+    # Get parameters
+    video_id = request.args.get('v', '')
+    format_id = request.args.get('format', '18')  # Default to 360p video
+    download_type = request.args.get('type', 'video')
+    
+    if not video_id:
+        flash("No video ID provided", "danger")
+        return redirect('/')
+    
+    # Create YouTube URL
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    
+    try:
+        # Initialize downloader
+        downloader = YoutubeDownloader()
+        
+        # Get direct URL to the YouTube content
+        logger.info(f"Getting direct URL for: {url} with format: {format_id}, type: {download_type}")
+        direct_url = downloader.get_direct_url(url, format_id, download_type)
+        
+        if not direct_url:
+            flash("Could not retrieve direct download URL", "danger")
+            return redirect('/')
+            
+        # Try to get video info to set a good filename
+        try:
+            video_info = get_yt_info(url)
+            title = video_info.get('title', f'youtube_{video_id}')
+        except Exception as e:
+            logger.warning(f"Error getting video info: {str(e)}")
+            title = f'youtube_{video_id}'
+        
+        # Make the title safe for a filename
+        safe_title = secure_filename(title).replace(' ', '_')
+        
+        # Set the appropriate extension and MIME type
+        if download_type == 'audio':
+            extension = '.mp3'
+            mime_type = 'audio/mpeg'
+        else:
+            extension = '.mp4'
+            mime_type = 'video/mp4'
+            
+        # Create proper filename
+        filename = f"{safe_title}{extension}"
+        
+        logger.info(f"Making request to: {direct_url[:50]}...")
+        
+        # Create a streaming response with proper headers to force download
+        response = requests.get(
+            direct_url, 
+            stream=True,
+            headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Referer': 'https://www.youtube.com/'
+            }
+        )
+        
+        # Check if the request was successful
+        if response.status_code != 200:
+            flash(f"Error: Could not access video content (HTTP {response.status_code})", "danger")
+            return redirect('/')
+        
+        # Get content type from response
+        content_type = response.headers.get('Content-Type', mime_type)
+        
+        # Create Flask response object
+        flask_response = Response(
+            response.iter_content(chunk_size=8192),
+            content_type=content_type
+        )
+        
+        # Set headers to force download with the proper filename
+        flask_response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Add content length if available
+        if 'Content-Length' in response.headers:
+            flask_response.headers['Content-Length'] = response.headers['Content-Length']
+        
+        # Record download statistics
+        Statistics.record_download(download_type)
+        
+        # Return the streaming response
+        logger.info(f"Streaming direct download for {filename}")
+        return flask_response
+        
+    except Exception as e:
+        logger.error(f"Error in download_file: {str(e)}")
+        flash(f"Error: {str(e)}", "danger")
+        return redirect(f'/watch?v={video_id}')
 
 @app.route('/privacy')
 def privacy_policy():
