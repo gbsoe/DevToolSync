@@ -189,15 +189,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
         fetch('/video_info', {
             method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
             body: formData
         })
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
                     throw new Error(data.error || 'Error fetching video information');
+                }).catch(err => {
+                    // If JSON parsing fails, create a generic error
+                    throw new Error('Server returned an invalid response. Please try again.');
                 });
             }
-            return response.json();
+            
+            // Try to parse the JSON response
+            return response.json().catch(err => {
+                console.error('JSON Parse Error:', err);
+                throw new Error('Failed to parse server response. Please try again.');
+            });
         })
         .then(data => {
             // Hide loader
@@ -535,15 +547,27 @@ document.addEventListener('DOMContentLoaded', function() {
         // Start download request
         fetch('/download', {
             method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
             body: formData
         })
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
                     throw new Error(data.error || 'Error generating download link');
+                }).catch(err => {
+                    // If JSON parsing fails, create a generic error
+                    throw new Error('Server returned an invalid response. Please try again.');
                 });
             }
-            return response.json();
+            
+            // Try to parse the JSON response
+            return response.json().catch(err => {
+                console.error('JSON Parse Error:', err);
+                throw new Error('Failed to parse server response. Please try again.');
+            });
         })
         .then(data => {
             // Reset UI state

@@ -75,7 +75,23 @@ def get_video_info():
             video_info = get_yt_info(url)
             cache_manager.add_to_cache(url, video_info)
         
-        return jsonify(video_info)
+        # Make sure this is a JSON-serializable dictionary
+        if not isinstance(video_info, dict):
+            video_info = {
+                'title': 'Unknown Video',
+                'is_playlist': False,
+                'video_formats': [
+                    {'format_id': '18', 'format': '360p (mp4)', 'ext': 'mp4', 'resolution': '360p'}
+                ],
+                'audio_formats': [
+                    {'format_id': '140', 'format': 'Audio (128kbps m4a)', 'ext': 'm4a', 'abr': '128kbps'}
+                ]
+            }
+        
+        # Add additional headers to ensure content type is correct
+        response = jsonify(video_info)
+        response.headers['Content-Type'] = 'application/json'
+        return response
     
     except Exception as e:
         logger.error(f"Error getting video info: {str(e)}")
@@ -93,8 +109,11 @@ def download_video():
     logger.info(f"Received download request - URL: {url}, Format: {format_id}, Type: {download_type}")
     
     if not url:
-        flash('Please enter a valid YouTube URL', 'danger')
-        return redirect(url_for('index'))
+        if request.is_xhr or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': 'Please enter a valid YouTube URL'}), 400
+        else:
+            flash('Please enter a valid YouTube URL', 'danger')
+            return redirect(url_for('index'))
     
     try:
         # Extract video ID for redirection to watch page
@@ -125,24 +144,37 @@ def download_video():
         # Record download in statistics
         Statistics.record_download(download_type)
         
-        # If this is an AJAX request, return a JSON response
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            # Generate direct download URL
-            direct_url = generate_clipto_url(url, format_id, download_type)
-            
+        # Generate direct download URL for both cases
+        direct_url = generate_clipto_url(url, format_id, download_type)
+        watch_url = f'/watch?v={video_id}&format={format_id}&type={download_type}'
+        
+        # Check if this is an AJAX request based on multiple criteria
+        is_ajax = (
+            request.is_xhr or 
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+            request.headers.get('Accept', '').startswith('application/json')
+        )
+        
+        if is_ajax:
+            # Return JSON response
             return jsonify({
                 'status': 'complete',
                 'download_url': direct_url,
                 'message': 'Download link generated',
-                'watch_url': f'/watch?v={video_id}&format={format_id}&type={download_type}'
+                'watch_url': watch_url
             })
         else:
             # Redirect to the custom download page
-            return redirect(f'/watch?v={video_id}&format={format_id}&type={download_type}')
+            return redirect(watch_url)
     
     except Exception as e:
         logger.error(f"Error generating download link: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        
+        if request.is_xhr or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': str(e)}), 500
+        else:
+            flash(f"Error: {str(e)}", 'danger')
+            return redirect(url_for('index'))
 
 @app.route('/watch')
 def watch_video():
