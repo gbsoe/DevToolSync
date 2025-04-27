@@ -343,6 +343,16 @@ def google_verification():
     """Serve Google verification file"""
     return send_file('google07df394c40c0da6f.html')
 
+@app.route('/sw.js')
+def service_worker():
+    """Serve the MonetAG service worker JavaScript file"""
+    response = send_file('sw.js')
+    # Set appropriate headers for a service worker
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Service-Worker-Allowed'] = '/'
+    response.headers['Cache-Control'] = 'no-cache'
+    return response
+
 @app.route('/privacy')
 def privacy_policy():
     """Privacy Policy page"""

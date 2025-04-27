@@ -32,22 +32,30 @@ class YoutubeDownloader:
         try:
             logger.info(f"Getting video info for: {url}")
             
-            # Ensure we have fresh cookies
-            if not ensure_fresh_cookies():
-                logger.warning("Could not refresh cookies, will try to continue without them")
+            # Always ensure we have fresh cookies for each request
+            ensure_fresh_cookies()
             
-            # Create a copy of base options and add any specific options
+            # Create a copy of base options with enhanced settings
             opts = self.base_opts.copy()
             opts['cookiefile'] = 'cookies.txt'
+            opts['ignoreerrors'] = True
+            opts['skip_download'] = True
+            opts['quiet'] = False  # Enable more detailed logging
             
-            # Try to get video info with cookies
+            # Add user agents to bypass restrictions
+            opts['user_agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            opts['referer'] = 'https://www.youtube.com/'
+            
+            # Try to get video info with enhanced options and cookies
             try:
                 with yt_dlp.YoutubeDL(opts) as ydl:
                     info = ydl.extract_info(url, download=False)
+                    if not info:
+                        raise Exception("Could not retrieve video information")
                     logger.info("Successfully retrieved video info using cookies")
             except Exception as e:
                 logger.warning(f"Failed to get video info with cookies: {str(e)}")
-                logger.info("Trying without cookies (anonymous access)")
+                logger.info("Trying with alternative settings")
                 
                 # Check for specific error patterns related to restrictions
                 error_str = str(e).lower()
@@ -55,26 +63,46 @@ class YoutubeDownloader:
                     'sign in to confirm', 'age-restricted', 'private video', 
                     'this video is not available', 'video unavailable', 'video is private'
                 ]):
-                    # Provide a user-friendly error message
-                    raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
-                
-                # Try one more time without cookies
-                try:
-                    opts.pop('cookiefile', None)
-                    with yt_dlp.YoutubeDL(opts) as ydl:
-                        info = ydl.extract_info(url, download=False)
-                        logger.info("Successfully retrieved video info anonymously")
-                except Exception as anonymous_error:
-                    # Check for specific error patterns in the second attempt as well
-                    error_str = str(anonymous_error).lower()
-                    if any(restriction in error_str for restriction in [
-                        'sign in to confirm', 'age-restricted', 'private video', 
-                        'this video is not available', 'video unavailable', 'video is private'
-                    ]):
+                    # Try with different user agent and cookie configuration
+                    try:
+                        # Regenerate cookies with different user agent
+                        ensure_fresh_cookies()
+                        
+                        # Try with alternative settings
+                        alt_opts = self.base_opts.copy()
+                        alt_opts['cookiefile'] = 'cookies.txt'
+                        alt_opts['user_agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36'
+                        alt_opts['referer'] = 'https://www.youtube.com/feed/trending'
+                        
+                        with yt_dlp.YoutubeDL(alt_opts) as ydl:
+                            info = ydl.extract_info(url, download=False)
+                            if not info:
+                                raise Exception("Could not retrieve video information")
+                            logger.info("Successfully retrieved video info with alternative settings")
+                    except Exception as alt_error:
                         # Provide a user-friendly error message
                         raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
-                    else:
-                        raise Exception(f"Failed to get video info: {str(anonymous_error)}")
+                
+                # If not restricted but failed for other reasons, try one more time without cookies
+                else:
+                    try:
+                        opts.pop('cookiefile', None)
+                        with yt_dlp.YoutubeDL(opts) as ydl:
+                            info = ydl.extract_info(url, download=False)
+                            if not info:
+                                raise Exception("Could not retrieve video information")
+                            logger.info("Successfully retrieved video info anonymously")
+                    except Exception as anonymous_error:
+                        # Check for specific error patterns in the second attempt as well
+                        error_str = str(anonymous_error).lower()
+                        if any(restriction in error_str for restriction in [
+                            'sign in to confirm', 'age-restricted', 'private video', 
+                            'this video is not available', 'video unavailable', 'video is private'
+                        ]):
+                            # Provide a user-friendly error message
+                            raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                        else:
+                            raise Exception(f"Failed to get video info: {str(anonymous_error)}")
             
             # Filter formats to only include standard resolutions
             if 'formats' in info:
@@ -109,9 +137,8 @@ class YoutubeDownloader:
         try:
             logger.info(f"Starting video download for URL: {url} with format: {format_id}")
             
-            # Ensure we have fresh cookies
-            if not ensure_fresh_cookies():
-                logger.warning("Could not refresh cookies, will try to continue without them")
+            # Always ensure we have fresh cookies for each request
+            ensure_fresh_cookies()
             
             def combined_progress_hook(d):
                 if d['status'] == 'downloading':
@@ -135,27 +162,32 @@ class YoutubeDownloader:
                     if progress_hook:
                         progress_hook(d)
             
-            # Base options with cookies
+            # Enhanced options with better browser simulation
             options = {
                 'format': format_id,
                 'progress_hooks': [combined_progress_hook],
                 'outtmpl': '%(title)s.%(ext)s',
                 'verbose': True,
-                'cookiefile': 'cookies.txt'
+                'cookiefile': 'cookies.txt',
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'ignoreerrors': True
             }
             
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
             
-            # Try to download with cookies first
+            # Try to download with enhanced options and cookies
             try:
                 with yt_dlp.YoutubeDL(options) as ydl:
                     info = ydl.extract_info(url, download=True)
+                    if not info:
+                        raise Exception("Could not download video information")
                     downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
                     logger.info(f"Successfully downloaded video to {downloaded_file}")
                     return downloaded_file
             except Exception as cookie_error:
-                logger.warning(f"Failed to download with cookies: {str(cookie_error)}")
+                logger.warning(f"Failed to download with primary settings: {str(cookie_error)}")
                 
                 # Check for specific error patterns related to restrictions
                 error_str = str(cookie_error).lower()
@@ -163,16 +195,36 @@ class YoutubeDownloader:
                     'sign in to confirm', 'age-restricted', 'private video', 
                     'this video is not available', 'video unavailable', 'video is private'
                 ]):
-                    # Provide a user-friendly error message
-                    raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                    # Try with a different approach for restricted videos
+                    try:
+                        # Regenerate cookies with different user agent
+                        ensure_fresh_cookies()
+                        
+                        # Try with alternative settings
+                        alt_options = options.copy()
+                        alt_options['user_agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36'
+                        alt_options['referer'] = 'https://www.youtube.com/feed/trending'
+                        
+                        with yt_dlp.YoutubeDL(alt_options) as ydl:
+                            info = ydl.extract_info(url, download=True)
+                            if not info:
+                                raise Exception("Could not download video")
+                            downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                            logger.info(f"Successfully downloaded restricted video with alternative settings to {downloaded_file}")
+                            return downloaded_file
+                    except Exception as restricted_error:
+                        # Provide a user-friendly error message
+                        raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
                 
                 logger.info("Trying without cookies (anonymous access)")
                 
-                # Try one more time without cookies
+                # Try one more time without cookies for non-restricted videos
                 try:
                     options.pop('cookiefile', None)
                     with yt_dlp.YoutubeDL(options) as ydl:
                         info = ydl.extract_info(url, download=True)
+                        if not info:
+                            raise Exception("Could not download video")
                         downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
                         logger.info(f"Successfully downloaded video anonymously to {downloaded_file}")
                         return downloaded_file
@@ -196,9 +248,8 @@ class YoutubeDownloader:
         try:
             logger.info(f"Starting audio download for URL: {url}")
             
-            # Ensure we have fresh cookies
-            if not ensure_fresh_cookies():
-                logger.warning("Could not refresh cookies, will try to continue without them")
+            # Always ensure we have fresh cookies for each request
+            ensure_fresh_cookies()
             
             def combined_progress_hook(d):
                 if d['status'] == 'downloading':
@@ -222,7 +273,7 @@ class YoutubeDownloader:
                     if progress_hook:
                         progress_hook(d)
             
-            # Base options with audio extraction
+            # Enhanced options with better browser simulation for audio
             options = {
                 'format': 'bestaudio/best',
                 'postprocessors': [{
@@ -232,21 +283,29 @@ class YoutubeDownloader:
                 'progress_hooks': [combined_progress_hook],
                 'outtmpl': '%(title)s.%(ext)s',
                 'verbose': True,
-                'cookiefile': 'cookies.txt'
+                'cookiefile': 'cookies.txt',
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'ignoreerrors': True
             }
             
             if output_path:
                 options['outtmpl'] = os.path.join(output_path, options['outtmpl'])
             
-            # Try to download with cookies first
+            # Try to download with enhanced options and cookies
             try:
                 with yt_dlp.YoutubeDL(options) as ydl:
                     info = ydl.extract_info(url, download=True)
+                    if not info:
+                        raise Exception("Could not download audio information")
                     downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                    # For audio files, the extension might be changed after post-processing
+                    if not os.path.exists(downloaded_file) and downloaded_file.endswith('.webm'):
+                        downloaded_file = downloaded_file.replace('.webm', '.mp3')
                     logger.info(f"Successfully downloaded audio to {downloaded_file}")
                     return downloaded_file
             except Exception as cookie_error:
-                logger.warning(f"Failed to download audio with cookies: {str(cookie_error)}")
+                logger.warning(f"Failed to download audio with primary settings: {str(cookie_error)}")
                 
                 # Check for specific error patterns related to restrictions
                 error_str = str(cookie_error).lower()
@@ -254,17 +313,43 @@ class YoutubeDownloader:
                     'sign in to confirm', 'age-restricted', 'private video', 
                     'this video is not available', 'video unavailable', 'video is private'
                 ]):
-                    # Provide a user-friendly error message
-                    raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
+                    # Try with a different approach for restricted videos
+                    try:
+                        # Regenerate cookies with different user agent
+                        ensure_fresh_cookies()
+                        
+                        # Try with alternative settings
+                        alt_options = options.copy()
+                        alt_options['user_agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36'
+                        alt_options['referer'] = 'https://www.youtube.com/feed/trending'
+                        
+                        with yt_dlp.YoutubeDL(alt_options) as ydl:
+                            info = ydl.extract_info(url, download=True)
+                            if not info:
+                                raise Exception("Could not download audio")
+                            downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                            # Handle potential extension change after audio processing
+                            if not os.path.exists(downloaded_file) and downloaded_file.endswith('.webm'):
+                                downloaded_file = downloaded_file.replace('.webm', '.mp3')
+                            logger.info(f"Successfully downloaded restricted audio with alternative settings to {downloaded_file}")
+                            return downloaded_file
+                    except Exception as restricted_error:
+                        # Provide a user-friendly error message
+                        raise Exception("This video has restrictions (age, privacy, or requires login) and cannot be downloaded publicly.")
                 
                 logger.info("Trying without cookies (anonymous access)")
                 
-                # Try one more time without cookies
+                # Try one more time without cookies for non-restricted videos
                 try:
                     options.pop('cookiefile', None)
                     with yt_dlp.YoutubeDL(options) as ydl:
                         info = ydl.extract_info(url, download=True)
+                        if not info:
+                            raise Exception("Could not download audio")
                         downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                        # Handle potential extension change
+                        if not os.path.exists(downloaded_file) and downloaded_file.endswith('.webm'):
+                            downloaded_file = downloaded_file.replace('.webm', '.mp3')
                         logger.info(f"Successfully downloaded audio anonymously to {downloaded_file}")
                         return downloaded_file
                 except Exception as anonymous_error:
