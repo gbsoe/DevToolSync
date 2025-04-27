@@ -701,43 +701,36 @@ def download_file():
         
         logger.info(f"Making request to: {direct_url[:50]}...")
         
-        # Create a streaming response with proper headers to force download
-        response = requests.get(
-            direct_url, 
-            stream=True,
-            headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Referer': 'https://www.youtube.com/'
-            }
-        )
+        # Fix for Replit's proxy issue: Instead of streaming through Flask,
+        # redirect the user directly to the source URL with proper download headers
+        # This avoids Replit's proxy issues in production
+        from urllib.parse import urlparse
         
-        # Check if the request was successful
-        if response.status_code != 200:
-            flash(f"Error: Could not access video content (HTTP {response.status_code})", "danger")
+        # Make sure the URL is valid and properly formatted
+        parsed_url = urlparse(direct_url)
+        if not all([parsed_url.scheme, parsed_url.netloc]):
+            logger.error(f"Invalid direct URL format: {direct_url[:50]}...")
+            flash("Error: Could not generate a valid download link", "danger")
             return redirect('/')
         
-        # Get content type from response
-        content_type = response.headers.get('Content-Type', mime_type)
-        
-        # Create Flask response object
-        flask_response = Response(
-            response.iter_content(chunk_size=8192),
-            content_type=content_type
-        )
-        
-        # Set headers to force download with the proper filename
-        flask_response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-        
-        # Add content length if available
-        if 'Content-Length' in response.headers:
-            flask_response.headers['Content-Length'] = response.headers['Content-Length']
-        
-        # Record download statistics
+        # Record download statistics before redirecting
         Statistics.record_download(download_type)
         
-        # Return the streaming response
-        logger.info(f"Streaming direct download for {filename}")
-        return flask_response
+        # Check if we're in a redirect loop (direct_url pointing to our own domain)
+        if 'replit.app' in parsed_url.netloc or 'repl.co' in parsed_url.netloc:
+            logger.error(f"Detected redirect loop to Replit domain: {parsed_url.netloc}")
+            flash("Error: Download redirect loop detected. Please try again.", "warning")
+            return redirect(f'/watch?v={video_id}')
+        
+        # Log and redirect to the direct URL
+        logger.info(f"Redirecting to direct download URL: {direct_url[:50]}...")
+        
+        # Create a redirect response with download headers
+        response = redirect(direct_url, code=302)
+        response.headers['Content-Type'] = mime_type
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
         
     except Exception as e:
         error_msg = str(e).lower()
