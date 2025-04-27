@@ -488,21 +488,20 @@ document.addEventListener('DOMContentLoaded', function() {
         isDownloading = true;
         updateDownloadButton();
 
-        // Show progress container
-        progressContainer.style.display = 'block';
-        progressBar.style.width = '0%';
-        progressBar.setAttribute('aria-valuenow', '0');
-        progressText.textContent = 'Starting download...';
-
         // Hide any previous download complete alert
         downloadCompleteAlert.style.display = 'none';
+        
+        // Show loading indicator
+        downloadButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Preparing download...';
+        downloadButton.disabled = true;
 
         // Prepare form data
         const formData = new FormData();
         formData.append('url', youtubeUrlInput.value.trim());
         formData.append('format', selectedFormat);
         formData.append('type', downloadType);
-        formData.append('playlist', (isPlaylist === true).toString()); // Add safe boolean check
+        formData.append('playlist', (isPlaylist === true).toString());
+        formData.append('title', currentVideoInfo.title || 'Unknown Video');
 
         // Start download request
         fetch('/download', {
@@ -512,23 +511,43 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
-                    throw new Error(data.error || 'Error starting download');
+                    throw new Error(data.error || 'Error generating download link');
                 });
             }
             return response.json();
         })
         .then(data => {
-            if (data.download_id) {
-                // Start checking download progress
-                checkDownloadProgress(data.download_id);
+            // Reset UI state
+            isDownloading = false;
+            updateDownloadButton();
+            
+            if (data.download_url) {
+                // Show download complete message
+                downloadCompleteAlert.style.display = 'block';
+                
+                // Update download button
+                downloadButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Download Ready';
+                downloadButton.disabled = false;
+                
+                // Set download link
+                const downloadLinkElem = document.getElementById('download-link');
+                if (downloadLinkElem) {
+                    downloadLinkElem.href = data.download_url;
+                    downloadLinkElem.setAttribute('target', '_blank');
+                }
+                
+                // Open the link in a new window/tab
+                window.open(data.download_url, '_blank');
+                
+                // Show completed status
+                showSuccess('Download link ready! Opening in a new tab...');
             } else {
-                throw new Error('No download ID received from server');
+                throw new Error('No download URL received from server');
             }
         })
         .catch(error => {
             isDownloading = false;
             updateDownloadButton();
-            progressContainer.style.display = 'none';
             showError(error.message);
         });
     }
@@ -684,6 +703,18 @@ document.addEventListener('DOMContentLoaded', function() {
             errorContainer.style.display = 'block';
         } else {
             alert(message);
+        }
+    }
+    
+    function showSuccess(message) {
+        if (errorContainer) {
+            errorContainer.innerHTML = `
+                <div class="alert alert-success" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    ${message}
+                </div>
+            `;
+            errorContainer.style.display = 'block';
         }
     }
 

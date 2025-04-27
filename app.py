@@ -283,14 +283,4 @@ def inject_seo_metadata():
         'current_year': time.strftime("%Y")
     }
 
-# Cleanup temporary files before exit
-def cleanup_temp_files():
-    logger.debug("Cleaning up temporary files")
-    import shutil
-    try:
-        shutil.rmtree(TEMP_DIR)
-    except Exception as e:
-        logger.error(f"Error cleaning up temporary directory: {str(e)}")
-
-import atexit
-atexit.register(cleanup_temp_files)
+# No cleanup needed as we don't download files locally anymore
