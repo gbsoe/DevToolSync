@@ -569,14 +569,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             directLinkBtn.innerHTML = '<i class="bi bi-link-45deg me-2"></i>Direct Link';
                             directLinkBtn.target = '_blank';
                             downloadCompleteAlert.appendChild(directLinkBtn);
-
-                            // Add direct link button
-                            const directLinkBtn = document.createElement('a');
-                            directLinkBtn.href = status.download_url;
-                            directLinkBtn.className = 'btn btn-secondary mt-2';
-                            directLinkBtn.innerHTML = '<i class="bi bi-link-45deg me-2"></i>Direct Link';
-                            directLinkBtn.target = '_blank';
-                            downloadCompleteAlert.appendChild(directLinkBtn);
                         }
                         
                         if (status.status === 'error') {

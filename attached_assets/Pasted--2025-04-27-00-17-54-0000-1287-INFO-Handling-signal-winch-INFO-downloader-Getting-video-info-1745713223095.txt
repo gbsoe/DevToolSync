@@ -1,0 +1,36 @@
+[2025-04-27 00:17:54 +0000] [1287] [INFO] Handling signal: winch
+INFO:downloader:Getting video info for: https://youtu.be/QePX_zRtH68?si=WHpYDf8k1MTjRjcA
+INFO:cookie_manager:Using existing cookie file
+INFO:downloader:Successfully retrieved video info using cookies
+INFO:app:Received download request - URL: https://youtu.be/QePX_zRtH68?si=WHpYDf8k1MTjRjcA, Format: 160, Type: video
+INFO:app:Download request: url=https://youtu.be/QePX_zRtH68?si=WHpYDf8k1MTjRjcA, format=160, type=video
+INFO:downloader:Starting video download for URL: https://youtu.be/QePX_zRtH68?si=WHpYDf8k1MTjRjcA with format: 160
+INFO:cookie_manager:Using existing cookie file
+[debug] Encodings: locale UTF-8, fs utf-8, pref UTF-8, out utf-8, error utf-8, screen utf-8
+[debug] yt-dlp version stable@2025.03.31 from yt-dlp/yt-dlp [5e457af57] (pip) API
+[debug] params: {'format': '160', 'progress_hooks': [<function YoutubeDownloader.download_video.<locals>.combined_progress_hook at 0x7f5d3213d620>], 'outtmpl': '/tmp/tmpvoqr6d_t/%(title)s.%(ext)s', 'verbose': True, 'cookiefile': 'cookies.txt', 'compat_opts': set(), 'http_headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.41 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Language': 'en-us,en;q=0.5', 'Sec-Fetch-Mode': 'navigate'}}
+[debug] Python 3.11.10 (CPython x86_64 64bit) - Linux-6.2.16-x86_64-with-glibc2.40 (OpenSSL 3.3.2 3 Sep 2024, glibc 2.40)
+[debug] exe versions: none
+[debug] Optional libraries: Cryptodome-3.22.0, certifi-2025.01.31, requests-2.32.3, sqlite3-3.46.1, urllib3-2.4.0
+[debug] Proxy map: {}
+[debug] Request Handlers: urllib, requests
+[debug] Plugin directories: none
+[debug] Loaded 1850 extractors
+[youtube] Extracting URL: https://youtu.be/QePX_zRtH68?si=WHpYDf8k1MTjRjcA
+[youtube] QePX_zRtH68: Downloading webpage
+[youtube] QePX_zRtH68: Downloading tv client config
+[youtube] QePX_zRtH68: Downloading player 22f02d3d-main
+[youtube] QePX_zRtH68: Downloading tv player API JSON
+[youtube] QePX_zRtH68: Downloading ios player API JSON
+[debug] Loading youtube-nsig.22f02d3d-main from cache
+[debug] [youtube] Decrypted nsig XlbJOrspleqVjrtq => S_0mv4K3eeqjgQ
+[debug] [youtube] Decrypted nsig wTBpyEmw33D2TrH7 => u3I6V1MqR6MQgA
+[debug] [youtube] QePX_zRtH68: ios client https formats require a GVS PO Token which was not provided. They will be skipped as they may yield HTTP Error 403. You can manually pass a GVS PO Token for this client with --extractor-args "youtube:po_token=ios.gvs+XXX". For more information, refer to  https://github.com/yt-dlp/yt-dlp/wiki/PO-Token-Guide . To enable these broken formats anyway, pass --extractor-args "youtube:formats=missing_pot"
+[youtube] QePX_zRtH68: Downloading m3u8 information
+[debug] Sort order given by extractor: quality, res, fps, hdr:12, source, vcodec, channels, acodec, lang, proto
+[debug] Formats sorted by: hasvid, ie_pref, quality, res, fps, hdr:12(7), source, vcodec, channels, acodec, lang, proto, size, br, asr, vext, aext, hasaud, id
+[info] QePX_zRtH68: Downloading 1 format(s): 160
+[debug] Invoking http downloader on "https://rr5---sn-cvh7kn6s.googlevideo.com/videoplayback?expire=1745734709&ei=1XcNaJ72F5Gq9fwPnLixuQ8&ip=34.47.211.64&id=o-AO8U_eKliEXiW2fO7Tit-Ikxc6PotDxj9BnmL6olFa9B&itag=160&aitags=133%2C134%2C135%2C136%2C160%2C242%2C243%2C244%2C247%2C278%2C394%2C395%2C396%2C397%2C398&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&met=1745713109%2C&mh=a4&mm=31%2C26&mn=sn-cvh7kn6s%2Csn-a5msener&ms=au%2Conr&mv=m&mvi=5&pl=17&rms=au%2Cau&initcwndbps=3228750&bui=AecWEAa2xJlWqckj0F_HX40UJBEv4go6n0N6Zdh7UpkH0gD9lbSt2p5rWTi-Z3KSvYxIXjzbofSNqxW-&vprv=1&svpuc=1&mime=video%2Fmp4&ns=o9yAdekB1-HvGAyD3TfeXr4Q&rqh=1&gir=yes&clen=6399142&dur=1159.133&lmt=1745562275852266&mt=1745712540&fvip=3&keepalive=yes&lmw=1&c=TVHTML5&sefc=1&txp=4535534&n=u3I6V1MqR6MQgA&sparams=expire%2Cei%2Cip%2Cid%2Caitags%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRAIgYMd7He7sMQfqfUfnfd_rA2xFuAmzLuOk6lynYavsYaMCIBcUh9eOXbLpesxSCPBH3-Bc8bK7qypJj4qSE-47USAa&lsparams=met%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=ACuhMU0wRQIhAODpKyTH-4NBmxwV1XznyrTCBZhHuVvhgg7CBVMweNwWAiATGVvLb__lCO4uz6-6IHdueRFINZYYrVx6j59lPwaOEA%3D%3D"
+[download] Destination: /tmp/tmpvoqr6d_t/Ashton Hall Is A LIAR.mp4
+[download] 100% of    6.10MiB in 00:00:01 at 4.07MiB/s
+INFO:downloader:Successfully downloaded video to /tmp/tmpvoqr6d_t/Ashton Hall Is A LIAR.mp4
