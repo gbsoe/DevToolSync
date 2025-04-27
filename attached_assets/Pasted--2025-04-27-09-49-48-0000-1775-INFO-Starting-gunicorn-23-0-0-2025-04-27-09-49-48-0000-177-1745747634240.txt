@@ -1,0 +1,363 @@
+[2025-04-27 09:49:48 +0000] [1775] [INFO] Starting gunicorn 23.0.0
+[2025-04-27 09:49:48 +0000] [1775] [INFO] Listening at: http://0.0.0.0:5000 (1775)
+[2025-04-27 09:49:48 +0000] [1775] [INFO] Using worker: sync
+[2025-04-27 09:49:48 +0000] [1786] [INFO] Booting worker with pid: 1786
+[2025-04-27 09:49:50 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:51 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:52 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:52 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:52 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:56 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:56 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:56 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:59 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:01 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:03 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:05 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:05 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:06 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:07 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:09 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:09 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:10 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:11 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:11 +0000] [1775] [INFO] Handling signal: winch
+INFO:app:Extracted video ID from URL: UKqkJ3TzVqY
+INFO:youtube_link_utils:Getting video info for: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+INFO:app:Getting direct URL for: https://www.youtube.com/watch?v=UKqkJ3TzVqY with format: 18, type: video
+INFO:downloader:Getting direct URL for: https://www.youtube.com/watch?v=UKqkJ3TzVqY with format: 18
+INFO:cookie_manager:Creating or refreshing cookie file
+INFO:cookie_manager:Creating enhanced Netscape format cookies file for YouTube
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (Macinto...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (Macinto...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (Macinto...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+[2025-04-27 09:51:55 +0000] [1775] [INFO] Handling signal: winch
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (Macinto...
+[2025-04-27 09:51:55 +0000] [1775] [INFO] Handling signal: winch
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (Macinto...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Collected 5 unique cookies from YouTube
+INFO:cookie_manager:Created cookies file with 8 cookies
+[debug] Encodings: locale UTF-8, fs utf-8, pref UTF-8, out utf-8, error utf-8, screen utf-8
+[debug] yt-dlp version stable@2025.03.31 from yt-dlp/yt-dlp [5e457af57] (pip) API
+[debug] params: {'format': '18/best[height<=720]/best', 'quiet': False, 'skip_download': True, 'cookiefile': 'cookies.txt', 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36', 'referer': 'https://www.youtube.com/feed/trending', 'ignoreerrors': False, 'verbose': True, 'nocheckcertificate': True, 'geo_bypass': True, 'extractor_args': {'youtube': {'player_client': 'web'}}, 'compat_opts': set(), 'http_headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.115 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Language': 'en-us,en;q=0.5', 'Sec-Fetch-Mode': 'navigate'}}
+[debug] Python 3.11.10 (CPython x86_64 64bit) - Linux-6.2.16-x86_64-with-glibc2.40 (OpenSSL 3.3.2 3 Sep 2024, glibc 2.40)
+[debug] exe versions: none
+[debug] Optional libraries: Cryptodome-3.22.0, certifi-2025.01.31, requests-2.32.3, sqlite3-3.46.1, urllib3-2.4.0
+[debug] Proxy map: {}
+[debug] Request Handlers: urllib, requests
+[debug] Plugin directories: none
+[debug] Loaded 1850 extractors
+[youtube] Extracting URL: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+[youtube] UKqkJ3TzVqY: Downloading webpage
+WARNING: [youtube] Skipping unsupported client "w"
+WARNING: [youtube] Skipping unsupported client "e"
+WARNING: [youtube] Skipping unsupported client "b"
+[youtube] UKqkJ3TzVqY: Downloading tv client config
+[youtube] UKqkJ3TzVqY: Downloading player 22f02d3d-main
+[youtube] UKqkJ3TzVqY: Downloading tv player API JSON
+[youtube] UKqkJ3TzVqY: Downloading ios player API JSON
+[debug] Loading youtube-nsig.22f02d3d-main from cache
+[debug] [youtube] Decrypted nsig GQcePuv_4CL0jiX6 => IuaormyLDzDkjQ
+[debug] [youtube] Decrypted nsig Jb0_aQ-8Z5ITwqj3 => FuimQgnKbbZGlA
+[debug] [youtube] UKqkJ3TzVqY: ios client https formats require a GVS PO Token which was not provided. They will be skipped as they may yield HTTP Error 403. You can manually pass a GVS PO Token for this client with --extractor-args "youtube:po_token=ios.gvs+XXX". For more information, refer to  https://github.com/yt-dlp/yt-dlp/wiki/PO-Token-Guide . To enable these broken formats anyway, pass --extractor-args "youtube:formats=missing_pot"
+[youtube] UKqkJ3TzVqY: Downloading m3u8 information
+[debug] Sort order given by extractor: quality, res, fps, hdr:12, source, vcodec, channels, acodec, lang, proto
+[debug] Formats sorted by: hasvid, ie_pref, quality, res, fps, hdr:12(7), source, vcodec, channels, acodec, lang, proto, size, br, asr, vext, aext, hasaud, id
+INFO:downloader:Found direct URL in info: https://www.youtube.com/watch?...
+INFO:youtube_link_utils:Getting video info for: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+INFO:app:Making request to: https://rr5---sn-cvh7knzd.googlevideo.com/videopla...
+[2025-04-27 09:52:17 +0000] [1775] [CRITICAL] WORKER TIMEOUT (pid:1786)
+[2025-04-27 09:52:18 +0000] [1786] [ERROR] Error handling request /download-file?v=UKqkJ3TzVqY&format=18&type=video&_t=1745747455&r=ob23hna1
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app.py", line 723, in download_file
+    Statistics.record_download(download_type)
+  File "/home/runner/workspace/models.py", line 92, in record_download
+    stats = Statistics.query.filter_by(date=today).first()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2759, in first
+    return self.limit(1)._iter().first()  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2858, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+           ^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+    cursor.execute(statement, parameters)
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/encodings/utf_8.py", line 15, in decode
+    def decode(input, errors='strict'):
+    
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-04-27 09:52:18 +0000] [1786] [INFO] Worker exiting (pid: 1786)
+[2025-04-27 09:52:18 +0000] [1918] [INFO] Booting worker with pid: 1918
+[2025-04-27 09:49:48 +0000] [1775] [INFO] Starting gunicorn 23.0.0
+[2025-04-27 09:49:48 +0000] [1775] [INFO] Listening at: http://0.0.0.0:5000 (1775)
+[2025-04-27 09:49:48 +0000] [1775] [INFO] Using worker: sync
+[2025-04-27 09:49:48 +0000] [1786] [INFO] Booting worker with pid: 1786
+[2025-04-27 09:49:50 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:51 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:52 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:52 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:52 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:56 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:56 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:56 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:49:59 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:01 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:03 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:05 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:05 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:06 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:07 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:09 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:09 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:10 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:11 +0000] [1775] [INFO] Handling signal: winch
+[2025-04-27 09:50:11 +0000] [1775] [INFO] Handling signal: winch
+INFO:app:Extracted video ID from URL: UKqkJ3TzVqY
+INFO:youtube_link_utils:Getting video info for: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+INFO:app:Getting direct URL for: https://www.youtube.com/watch?v=UKqkJ3TzVqY with format: 18, type: video
+INFO:downloader:Getting direct URL for: https://www.youtube.com/watch?v=UKqkJ3TzVqY with format: 18
+INFO:cookie_manager:Creating or refreshing cookie file
+INFO:cookie_manager:Creating enhanced Netscape format cookies file for YouTube
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (Macinto...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (Macinto...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (Macinto...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+[2025-04-27 09:51:55 +0000] [1775] [INFO] Handling signal: winch
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (Macinto...
+[2025-04-27 09:51:55 +0000] [1775] [INFO] Handling signal: winch
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (Macinto...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (Windows...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (X11; Li...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Fetching https://www.youtube.com/ with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/explore with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/explore
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/trending with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/trending
+INFO:cookie_manager:Fetching https://www.youtube.com/feed/subscriptions with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/feed/subscriptions
+INFO:cookie_manager:Fetching https://www.youtube.com/results?search_query=music with User-Agent: Mozilla/5.0 (iPad; C...
+INFO:cookie_manager:Got 5 cookies from YouTube request to https://www.youtube.com/results?search_query=music
+INFO:cookie_manager:Collected 5 unique cookies from YouTube
+INFO:cookie_manager:Created cookies file with 8 cookies
+[debug] Encodings: locale UTF-8, fs utf-8, pref UTF-8, out utf-8, error utf-8, screen utf-8
+[debug] yt-dlp version stable@2025.03.31 from yt-dlp/yt-dlp [5e457af57] (pip) API
+[debug] params: {'format': '18/best[height<=720]/best', 'quiet': False, 'skip_download': True, 'cookiefile': 'cookies.txt', 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36', 'referer': 'https://www.youtube.com/feed/trending', 'ignoreerrors': False, 'verbose': True, 'nocheckcertificate': True, 'geo_bypass': True, 'extractor_args': {'youtube': {'player_client': 'web'}}, 'compat_opts': set(), 'http_headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.115 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Language': 'en-us,en;q=0.5', 'Sec-Fetch-Mode': 'navigate'}}
+[debug] Python 3.11.10 (CPython x86_64 64bit) - Linux-6.2.16-x86_64-with-glibc2.40 (OpenSSL 3.3.2 3 Sep 2024, glibc 2.40)
+[debug] exe versions: none
+[debug] Optional libraries: Cryptodome-3.22.0, certifi-2025.01.31, requests-2.32.3, sqlite3-3.46.1, urllib3-2.4.0
+[debug] Proxy map: {}
+[debug] Request Handlers: urllib, requests
+[debug] Plugin directories: none
+[debug] Loaded 1850 extractors
+[youtube] Extracting URL: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+[youtube] UKqkJ3TzVqY: Downloading webpage
+WARNING: [youtube] Skipping unsupported client "w"
+WARNING: [youtube] Skipping unsupported client "e"
+WARNING: [youtube] Skipping unsupported client "b"
+[youtube] UKqkJ3TzVqY: Downloading tv client config
+[youtube] UKqkJ3TzVqY: Downloading player 22f02d3d-main
+[youtube] UKqkJ3TzVqY: Downloading tv player API JSON
+[youtube] UKqkJ3TzVqY: Downloading ios player API JSON
+[debug] Loading youtube-nsig.22f02d3d-main from cache
+[debug] [youtube] Decrypted nsig GQcePuv_4CL0jiX6 => IuaormyLDzDkjQ
+[debug] [youtube] Decrypted nsig Jb0_aQ-8Z5ITwqj3 => FuimQgnKbbZGlA
+[debug] [youtube] UKqkJ3TzVqY: ios client https formats require a GVS PO Token which was not provided. They will be skipped as they may yield HTTP Error 403. You can manually pass a GVS PO Token for this client with --extractor-args "youtube:po_token=ios.gvs+XXX". For more information, refer to  https://github.com/yt-dlp/yt-dlp/wiki/PO-Token-Guide . To enable these broken formats anyway, pass --extractor-args "youtube:formats=missing_pot"
+[youtube] UKqkJ3TzVqY: Downloading m3u8 information
+[debug] Sort order given by extractor: quality, res, fps, hdr:12, source, vcodec, channels, acodec, lang, proto
+[debug] Formats sorted by: hasvid, ie_pref, quality, res, fps, hdr:12(7), source, vcodec, channels, acodec, lang, proto, size, br, asr, vext, aext, hasaud, id
+INFO:downloader:Found direct URL in info: https://www.youtube.com/watch?...
+INFO:youtube_link_utils:Getting video info for: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+INFO:app:Making request to: https://rr5---sn-cvh7knzd.googlevideo.com/videopla...
+[2025-04-27 09:52:17 +0000] [1775] [CRITICAL] WORKER TIMEOUT (pid:1786)
+[2025-04-27 09:52:18 +0000] [1786] [ERROR] Error handling request /download-file?v=UKqkJ3TzVqY&format=18&type=video&_t=1745747455&r=ob23hna1
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app.py", line 723, in download_file
+    Statistics.record_download(download_type)
+  File "/home/runner/workspace/models.py", line 92, in record_download
+    stats = Statistics.query.filter_by(date=today).first()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2759, in first
+    return self.limit(1)._iter().first()  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2858, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+           ^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+    cursor.execute(statement, parameters)
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/encodings/utf_8.py", line 15, in decode
+    def decode(input, errors='strict'):
+    
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-04-27 09:52:18 +0000] [1786] [INFO] Worker exiting (pid: 1786)
+[2025-04-27 09:52:18 +0000] [1918] [INFO] Booting worker with pid: 1918
+[2025-04-27 09:53:15 +0000] [1775] [INFO] Handling signal: winch
