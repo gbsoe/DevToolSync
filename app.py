@@ -9,7 +9,7 @@ import urllib.parse
 from sqlalchemy import func
 
 # Import our modules
-from youtube_link_utils import get_video_info as get_yt_info, generate_clipto_url, get_video_id
+from youtube_link_utils import get_video_info as get_yt_info, generate_clipto_url, generate_download_file_url, get_video_id
 from downloader import YoutubeDownloader
 from cache_manager import CacheManager
 from models import db, Download, Statistics
