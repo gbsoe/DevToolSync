@@ -1,15 +1,13 @@
 import os
 import logging
-import tempfile
-import time
-import threading
 import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify, send_from_directory
+import time
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory, send_file
 from werkzeug.utils import secure_filename
 import urllib.parse
 
 # Import our modules
-from downloader import YoutubeDownloader
+from youtube_link_utils import get_video_info as get_yt_info, generate_clipto_url, get_video_id
 from cache_manager import CacheManager
 from models import db, Download, Statistics
 
@@ -18,7 +16,6 @@ logging.basicConfig(level=logging.INFO,
                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -44,17 +41,8 @@ with app.app_context():
     db.create_all()
     logger.debug("Database tables created")
 
-# Initialize the downloader and cache manager
-downloader = YoutubeDownloader()
+# Initialize the cache manager
 cache_manager = CacheManager(max_size=50)  # Store info for up to 50 videos
-
-# Create a temporary directory for downloads
-TEMP_DIR = tempfile.mkdtemp()
-logger.debug(f"Created temporary directory at {TEMP_DIR}")
-
-# Track download progress
-download_progress = {}
-downloads_lock = threading.Lock()
 
 @app.route('/')
 def index():
@@ -84,7 +72,7 @@ def get_video_info():
         
         if not video_info:
             # Not in cache, get the info
-            video_info = downloader.get_video_info(url)
+            video_info = get_yt_info(url)
             cache_manager.add_to_cache(url, video_info)
         
         return jsonify(video_info)
@@ -95,7 +83,7 @@ def get_video_info():
 
 @app.route('/download', methods=['POST'])
 def download_video():
-    """Download a YouTube video or audio"""
+    """Generate a direct download link for a YouTube video or audio"""
     url = request.form.get('url', '')
     format_id = request.form.get('format', 'best')
     download_type = request.form.get('type', 'video')
@@ -104,212 +92,46 @@ def download_video():
     
     logger.info(f"Received download request - URL: {url}, Format: {format_id}, Type: {download_type}")
     
-    # Log the request details for debugging
-    logger.info(f"Download request: url={url}, format={format_id}, type={download_type}")
-    
     if not url:
         flash('Please enter a valid YouTube URL', 'danger')
         return redirect(url_for('index'))
     
     try:
-        # Generate a unique ID for this download
-        download_id = str(int(time.time() * 1000))
-        with downloads_lock:
-            download_progress[download_id] = {
-                'progress': 0,
-                'status': 'starting',
-                'filename': None,
-                'db_id': None,  # Will store database record ID
-                'start_time': time.time()  # Track when download started
-            }
+        # Get client IP (anonymize it for privacy)
+        ip_address = request.remote_addr
+        if ip_address:
+            # Anonymize IP by removing last octet
+            ip_parts = ip_address.split('.')
+            if len(ip_parts) == 4:  # IPv4
+                ip_address = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0"
+            else:
+                ip_address = "0.0.0.0"  # Fallback
         
-        # Record download in database
-        try:
-            # Get client IP (we'll anonymize it for privacy)
-            ip_address = request.remote_addr
-            if ip_address:
-                # Anonymize IP by removing last octet
-                ip_parts = ip_address.split('.')
-                if len(ip_parts) == 4:  # IPv4
-                    ip_address = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0"
-                else:
-                    ip_address = "0.0.0.0"  # Fallback
-            
-            # Create download record
-            download_record = Download.add_download(
-                url=url,
-                video_title=video_title,
-                format_type=download_type,
-                quality=format_id,
-                status="started",
-                ip_address=ip_address
-            )
-            
-            # Store database ID in progress tracker
-            with downloads_lock:
-                download_progress[download_id]['db_id'] = download_record.id
-                
-            # Record download in statistics
-            Statistics.record_download(download_type)
-            
-        except Exception as db_error:
-            logger.error(f"Error recording download in database: {str(db_error)}")
-            # Continue with download even if database recording fails
-        
-        # Start download in background thread
-        download_thread = threading.Thread(
-            target=process_download,
-            args=(download_id, url, format_id, download_type, playlist)
+        # Create download record in the database
+        download_record = Download.add_download(
+            url=url,
+            video_title=video_title,
+            format_type=download_type,
+            quality=format_id,
+            status="completed",  # Mark as completed immediately since we're just generating a link
+            ip_address=ip_address
         )
-        download_thread.daemon = True
-        download_thread.start()
+        
+        # Record download in statistics
+        Statistics.record_download(download_type)
+        
+        # Generate direct download URL
+        direct_url = generate_clipto_url(url, format_id, download_type)
         
         return jsonify({
-            'download_id': download_id,
-            'message': 'Download started'
+            'status': 'complete',
+            'download_url': direct_url,
+            'message': 'Download link generated'
         })
     
     except Exception as e:
-        logger.error(f"Error starting download: {str(e)}")
+        logger.error(f"Error generating download link: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
-def process_download(download_id, url, format_id, download_type, playlist):
-    """Process the download in a background thread"""
-    with app.app_context():
-        try:
-            with downloads_lock:
-                download_progress[download_id]['status'] = 'downloading'
-            
-            # Define progress callback function
-            def progress_hook(d):
-                try:
-                    if d['status'] == 'downloading':
-                        total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
-                        downloaded = d.get('downloaded_bytes', 0)
-                        
-                        if total > 0:
-                            percent = downloaded / total * 100
-                        else:
-                            percent = 0
-                        
-                        with downloads_lock:
-                            download_progress[download_id]['progress'] = percent
-                    
-                    elif d['status'] == 'finished':
-                        with downloads_lock:
-                            download_progress[download_id]['status'] = 'processing'
-                except Exception as e:
-                    logger.error(f"Error updating progress: {str(e)}")
-            
-            # Perform the download
-            if download_type == 'audio':
-                filename = downloader.download_audio(
-                    url, 
-                    output_path=TEMP_DIR, 
-                    progress_hook=progress_hook,
-                    playlist=playlist
-                )
-            else:  # video
-                filename = downloader.download_video(
-                    url, 
-                    format_id=format_id, 
-                    output_path=TEMP_DIR, 
-                    progress_hook=progress_hook,
-                    playlist=playlist
-                )
-            
-            # Update download status
-            with downloads_lock:
-                download_progress[download_id]['status'] = 'complete'
-                download_progress[download_id]['filename'] = filename
-                
-                # Update database record if we have one
-                db_id = download_progress[download_id].get('db_id')
-                if db_id:
-                    try:
-                        # Get file size if available
-                        file_size = os.path.getsize(filename) if os.path.exists(filename) else None
-                        
-                        # Calculate download time (estimate)
-                        start_time = download_progress[download_id].get('start_time', time.time() - 30)
-                        download_time = time.time() - start_time
-                        
-                        # Update record in database
-                        Download.update_status(
-                            download_id=db_id,
-                            status="completed",
-                            file_size=file_size,
-                            download_time=download_time
-                        )
-                    except Exception as db_error:
-                        logger.error(f"Error updating download record: {str(db_error)}")
-        
-        except Exception as e:
-            logger.error(f"Download error: {str(e)}")
-            with downloads_lock:
-                download_progress[download_id]['status'] = 'error'
-                download_progress[download_id]['error'] = str(e)
-                
-                # Update database record if we have one
-                db_id = download_progress[download_id].get('db_id')
-                if db_id:
-                    try:
-                        # Update record in database
-                        Download.update_status(
-                            download_id=db_id,
-                            status="failed"
-                        )
-                    except Exception as db_error:
-                        logger.error(f"Error updating download record: {str(db_error)}")
-
-@app.route('/download_status/<download_id>', methods=['GET'])
-def check_download_status(download_id):
-    """Check the status of a download"""
-    with downloads_lock:
-        if download_id in download_progress:
-            status = download_progress[download_id].copy()
-            # If download is complete, include file download URL
-            if status['status'] == 'complete' and status['filename']:
-                status['download_url'] = url_for('get_file', download_id=download_id)
-            return jsonify(status)
-        else:
-            return jsonify({'error': 'Download not found'}), 404
-
-@app.route('/get_file/<download_id>', methods=['GET'])
-def get_file(download_id):
-    """Download the completed file"""
-    with downloads_lock:
-        if download_id in download_progress and download_progress[download_id]['status'] == 'complete':
-            filename = download_progress[download_id]['filename']
-            if filename and os.path.exists(filename):
-                basename = os.path.basename(filename)
-                
-                # Only start cleanup after successful download completion
-                def cleanup_file():
-                    try:
-                        time.sleep(600)  # 10 minutes wait
-                        with downloads_lock:
-                            if download_id in download_progress:
-                                if os.path.exists(filename):
-                                    os.remove(filename)
-                                    logger.debug(f"Removed temporary file: {filename}")
-                                del download_progress[download_id]
-                    except Exception as e:
-                        logger.error(f"Error cleaning up file: {str(e)}")
-
-                if not getattr(cleanup_file, 'started', False):
-                    cleanup_thread = threading.Thread(target=cleanup_file)
-                    cleanup_thread.daemon = True
-                    cleanup_thread.start()
-                    setattr(cleanup_file, 'started', True)
-                
-                return send_file(
-                    filename,
-                    as_attachment=True,
-                    download_name=basename
-                )
-    
-    return jsonify({'error': 'File not found or download not complete'}), 404
 
 @app.route('/error')
 def error_page():

@@ -13,3 +13,4 @@ yt-dlp
 browser-cookie3
 playwright
 trafilatura
+pytube
