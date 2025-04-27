@@ -241,12 +241,24 @@ document.addEventListener('DOMContentLoaded', function() {
             displaySingleVideoInfo(videoInfo);
         }
 
-        // Auto-select the first video format
-        if (videoInfo && videoInfo.formats && videoInfo.formats.length > 0) {
-            selectedFormat = videoInfo.formats[0].format_id;
+        // Handle formats - Check both the old 'formats' property and new specific format properties
+        const hasFormats = videoInfo && 
+                          ((videoInfo.formats && videoInfo.formats.length > 0) || 
+                           (videoInfo.video_formats && videoInfo.video_formats.length > 0));
+
+        if (hasFormats) {
+            // For backward compatibility
+            if (videoInfo.formats && videoInfo.formats.length > 0) {
+                selectedFormat = videoInfo.formats[0].format_id;
+            } 
+            // For the new format structure
+            else if (videoInfo.video_formats && videoInfo.video_formats.length > 0) {
+                selectedFormat = videoInfo.video_formats[0].format_id;
+            }
+            
             updateFormatSelection();
         }
-
+        
         // Update download button state
         updateDownloadButton();
     }
@@ -296,19 +308,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (videoFormatsContainer) {
             videoFormatsContainer.innerHTML = '';
 
-            if (videoInfo.formats && videoInfo.formats.length > 0) {
-                videoInfo.formats.forEach(format => {
+            // Check for video formats (try both structures)
+            const videoFormats = videoInfo.video_formats || 
+                               (videoInfo.formats ? videoInfo.formats.filter(f => f.format && f.format.includes('mp4')) : []);
+
+            if (videoFormats && videoFormats.length > 0) {
+                videoFormats.forEach(format => {
                     const formatElement = document.createElement('div');
                     formatElement.className = 'form-check format-select';
+                    
+                    // Use format or format_note or a default description
+                    const formatDesc = format.format || format.format_note || `${format.resolution || '360p'} video`;
+                    
                     formatElement.innerHTML = `
                         <input class="form-check-input" type="radio" name="videoFormat" id="format_${format.format_id}" value="${format.format_id}">
                         <label class="form-check-label" for="format_${format.format_id}">
-                            ${format.format_note || format.format_id}
+                            ${formatDesc}
                         </label>
                     `;
 
                     formatElement.querySelector('input').addEventListener('change', function() {
                         selectedFormat = this.value;
+                        downloadType = 'video';  // Set the download type to video
                         updateFormatSelection();
                         updateDownloadButton();
                     });
@@ -321,6 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (firstInput) {
                     firstInput.checked = true;
                     selectedFormat = firstInput.value;
+                    downloadType = 'video';  // Set the initial download type
                 }
             } else {
                 videoFormatsContainer.innerHTML = '<p class="text-muted">No video formats available</p>';
@@ -331,27 +353,34 @@ document.addEventListener('DOMContentLoaded', function() {
         if (audioFormatsContainer) {
             audioFormatsContainer.innerHTML = '';
 
-            if (videoInfo.audio_formats && videoInfo.audio_formats.length > 0) {
-                videoInfo.audio_formats.forEach(format => {
+            // Check for audio formats
+            const audioFormats = videoInfo.audio_formats || 
+                               (videoInfo.formats ? videoInfo.formats.filter(f => f.format && f.format.toLowerCase().includes('audio')) : []);
+
+            if (audioFormats && audioFormats.length > 0) {
+                audioFormats.forEach(format => {
                     const formatElement = document.createElement('div');
                     formatElement.className = 'form-check format-select';
+                    
+                    // Use format or a default description
+                    const formatDesc = format.format || `Audio ${format.abr || '128kbps'}`;
+                    
                     formatElement.innerHTML = `
                         <input class="form-check-input" type="radio" name="audioFormat" id="audio_${format.format_id}" value="${format.format_id}">
                         <label class="form-check-label" for="audio_${format.format_id}">
-                            ${format.format_note || format.format_id}
+                            ${formatDesc}
                         </label>
                     `;
 
                     formatElement.querySelector('input').addEventListener('change', function() {
                         selectedFormat = this.value;
+                        downloadType = 'audio';  // Set the download type to audio
                         updateFormatSelection();
                         updateDownloadButton();
                     });
 
                     audioFormatsContainer.appendChild(formatElement);
                 });
-
-                // Don't select by default, let the user choose
             } else {
                 audioFormatsContainer.innerHTML = '<p class="text-muted">No audio formats available</p>';
             }
