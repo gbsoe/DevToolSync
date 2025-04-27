@@ -4,7 +4,7 @@ function updateProgress(downloadId) {
     const progressText = document.getElementById('progress-text');
     const progressContainer = document.getElementById('progress-container');
     const downloadComplete = document.getElementById('download-complete');
-    
+
     function checkStatus() {
         fetch(`/download_status/${downloadId}`)
             .then(response => response.json())
@@ -13,9 +13,9 @@ function updateProgress(downloadId) {
                     progressText.textContent = `Error: ${data.error}`;
                     return;
                 }
-                
+
                 progressContainer.style.display = 'block';
-                
+
                 if (data.status === 'downloading' && data.progress) {
                     const percent = Math.round(data.progress);
                     progressBar.style.width = `${percent}%`;
@@ -29,7 +29,7 @@ function updateProgress(downloadId) {
                     document.getElementById('download-link').href = data.download_url;
                     return;
                 }
-                
+
                 setTimeout(checkStatus, 1000);
             })
             .catch(error => {
@@ -37,7 +37,7 @@ function updateProgress(downloadId) {
                 progressText.textContent = 'Error checking download status';
             });
     }
-    
+
     checkStatus();
 }
 
@@ -48,14 +48,14 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadButton.addEventListener('click', function() {
             const url = document.getElementById('youtube-url').value;
             const format = document.querySelector('input[name="format"]:checked')?.value;
-            
+
             if (!url || !format) return;
-            
+
             const progressContainer = document.getElementById('progress-container');
             const downloadComplete = document.getElementById('download-complete');
             progressContainer.style.display = 'block';
             downloadComplete.style.display = 'none';
-            
+
             fetch('/download', {
                 method: 'POST',
                 headers: {
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const audioTabButton = document.getElementById('audio-tab-button');
     const playlistItemsContainer = document.getElementById('playlist-items');
     const playlistInfoContainer = document.getElementById('playlist-info');
-    
+
     // Global variables
     let currentVideoInfo = null;
     let selectedFormat = null;
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let isDownloading = false;
     let downloadCheckInterval = null;
     let isPlaylist = false;
-    
+
     // Initialize tooltips if Bootstrap is loaded
     if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     }
-    
+
     // Event Listeners
     if (youtubeForm) {
         youtubeForm.addEventListener('submit', function(e) {
@@ -133,21 +133,21 @@ document.addEventListener('DOMContentLoaded', function() {
             getVideoInfo();
         });
     }
-    
+
     if (videoTabButton) {
         videoTabButton.addEventListener('click', function() {
             downloadType = 'video';
             updateDownloadButton();
         });
     }
-    
+
     if (audioTabButton) {
         audioTabButton.addEventListener('click', function() {
             downloadType = 'audio';
             updateDownloadButton();
         });
     }
-    
+
     if (downloadButton) {
         downloadButton.addEventListener('click', function() {
             if (!isDownloading && selectedFormat) {
@@ -155,26 +155,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Functions
     function getVideoInfo() {
         const youtubeUrl = youtubeUrlInput.value.trim();
-        
+
         if (!youtubeUrl) {
             showError('Please enter a YouTube URL');
             return;
         }
-        
+
         // Reset UI state
         resetUI();
-        
+
         // Show loader
         videoLoader.style.display = 'block';
-        
+
         // Fetch video info from server
         const formData = new FormData();
         formData.append('url', youtubeUrl);
-        
+
         fetch('/video_info', {
             method: 'POST',
             body: formData
@@ -190,11 +190,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             // Hide loader
             videoLoader.style.display = 'none';
-            
+
             // Store video info
             currentVideoInfo = data;
             isPlaylist = data.is_playlist;
-            
+
             // Display video information
             displayVideoInfo(data);
         })
@@ -203,19 +203,19 @@ document.addEventListener('DOMContentLoaded', function() {
             showError(error.message);
         });
     }
-    
+
     function displayVideoInfo(videoInfo) {
         // Show video info container
         if (videoInfoContainer) {
             videoInfoContainer.style.display = 'block';
-            
+
             // Scroll to video info container with smooth animation
             videoInfoContainer.scrollIntoView({ 
                 behavior: 'smooth', 
                 block: 'start'
             });
         }
-        
+
         // Check if this is a playlist
         if (videoInfo && videoInfo.is_playlist) {
             // Set global playlist flag
@@ -228,26 +228,26 @@ document.addEventListener('DOMContentLoaded', function() {
             // Display single video information
             displaySingleVideoInfo(videoInfo);
         }
-        
+
         // Auto-select the first video format
         if (videoInfo && videoInfo.formats && videoInfo.formats.length > 0) {
             selectedFormat = videoInfo.formats[0].format_id;
             updateFormatSelection();
         }
-        
+
         // Update download button state
         updateDownloadButton();
     }
-    
+
     function displaySingleVideoInfo(videoInfo) {
         // Hide playlist container if visible
         if (playlistInfoContainer) {
             playlistInfoContainer.style.display = 'none';
         }
-        
+
         // Show video details container
         videoDetailsContainer.style.display = 'block';
-        
+
         // Set thumbnail with a fallback
         if (thumbnailElement) {
             if (videoInfo.thumbnail) {
@@ -257,33 +257,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 thumbnailElement.style.display = 'none';
             }
         }
-        
+
         // Set video title
         if (videoTitleElement) {
             videoTitleElement.textContent = videoInfo.title || 'Unknown Title';
         }
-        
+
         // Set video duration
         if (videoDurationElement) {
             const duration = videoInfo.duration ? formatDuration(videoInfo.duration) : 'Unknown';
             videoDurationElement.textContent = duration;
         }
-        
+
         // Set video uploader
         if (videoUploaderElement) {
             videoUploaderElement.textContent = videoInfo.uploader || 'Unknown Uploader';
         }
-        
+
         // Set video views
         if (videoViewsElement) {
             const views = videoInfo.view_count ? formatViews(videoInfo.view_count) : 'Unknown';
             videoViewsElement.textContent = views;
         }
-        
+
         // Display video formats
         if (videoFormatsContainer) {
             videoFormatsContainer.innerHTML = '';
-            
+
             if (videoInfo.formats && videoInfo.formats.length > 0) {
                 videoInfo.formats.forEach(format => {
                     const formatElement = document.createElement('div');
@@ -294,16 +294,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${format.format_note || format.format_id}
                         </label>
                     `;
-                    
+
                     formatElement.querySelector('input').addEventListener('change', function() {
                         selectedFormat = this.value;
                         updateFormatSelection();
                         updateDownloadButton();
                     });
-                    
+
                     videoFormatsContainer.appendChild(formatElement);
                 });
-                
+
                 // Select the first format by default
                 const firstInput = videoFormatsContainer.querySelector('input');
                 if (firstInput) {
@@ -314,11 +314,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 videoFormatsContainer.innerHTML = '<p class="text-muted">No video formats available</p>';
             }
         }
-        
+
         // Display audio formats
         if (audioFormatsContainer) {
             audioFormatsContainer.innerHTML = '';
-            
+
             if (videoInfo.audio_formats && videoInfo.audio_formats.length > 0) {
                 videoInfo.audio_formats.forEach(format => {
                     const formatElement = document.createElement('div');
@@ -329,49 +329,49 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${format.format_note || format.format_id}
                         </label>
                     `;
-                    
+
                     formatElement.querySelector('input').addEventListener('change', function() {
                         selectedFormat = this.value;
                         updateFormatSelection();
                         updateDownloadButton();
                     });
-                    
+
                     audioFormatsContainer.appendChild(formatElement);
                 });
-                
+
                 // Don't select by default, let the user choose
             } else {
                 audioFormatsContainer.innerHTML = '<p class="text-muted">No audio formats available</p>';
             }
         }
     }
-    
+
     function displayPlaylistInfo(playlistInfo) {
         // Hide single video details if visible
         if (videoDetailsContainer) {
             videoDetailsContainer.style.display = 'none';
         }
-        
+
         // Show playlist info container
         if (playlistInfoContainer) {
             playlistInfoContainer.style.display = 'block';
-            
+
             // Set playlist title
             const playlistTitleElement = playlistInfoContainer.querySelector('#playlist-title');
             if (playlistTitleElement) {
                 playlistTitleElement.textContent = playlistInfo.title || 'YouTube Playlist';
             }
-            
+
             // Set playlist count
             const playlistCountElement = playlistInfoContainer.querySelector('#playlist-count');
             if (playlistCountElement) {
                 playlistCountElement.textContent = playlistInfo.playlist_count || 'Unknown';
             }
-            
+
             // Display playlist items
             if (playlistItemsContainer) {
                 playlistItemsContainer.innerHTML = '';
-                
+
                 if (playlistInfo.entries && playlistInfo.entries.length > 0) {
                     playlistInfo.entries.forEach((item, index) => {
                         const itemElement = document.createElement('div');
@@ -385,10 +385,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                         `;
-                        
+
                         playlistItemsContainer.appendChild(itemElement);
                     });
-                    
+
                     // Add info about more videos if not all are shown
                     if (playlistInfo.playlist_count > playlistInfo.entries.length) {
                         const moreElement = document.createElement('div');
@@ -400,11 +400,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     playlistItemsContainer.innerHTML = '<p class="text-muted">No playlist items available</p>';
                 }
             }
-            
+
             // Display playlist formats
             if (videoFormatsContainer) {
                 videoFormatsContainer.innerHTML = '';
-                
+
                 if (playlistInfo.formats && playlistInfo.formats.length > 0) {
                     playlistInfo.formats.forEach(format => {
                         const formatElement = document.createElement('div');
@@ -415,16 +415,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ${format.format_note || format.format_id}
                             </label>
                         `;
-                        
+
                         formatElement.querySelector('input').addEventListener('change', function() {
                             selectedFormat = this.value;
                             updateFormatSelection();
                             updateDownloadButton();
                         });
-                        
+
                         videoFormatsContainer.appendChild(formatElement);
                     });
-                    
+
                     // Select the first format by default
                     const firstInput = videoFormatsContainer.querySelector('input');
                     if (firstInput) {
@@ -435,11 +435,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     videoFormatsContainer.innerHTML = '<p class="text-muted">No video formats available</p>';
                 }
             }
-            
+
             // Display audio formats
             if (audioFormatsContainer) {
                 audioFormatsContainer.innerHTML = '';
-                
+
                 if (playlistInfo.audio_formats && playlistInfo.audio_formats.length > 0) {
                     playlistInfo.audio_formats.forEach(format => {
                         const formatElement = document.createElement('div');
@@ -450,13 +450,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ${format.format_note || format.format_id}
                             </label>
                         `;
-                        
+
                         formatElement.querySelector('input').addEventListener('change', function() {
                             selectedFormat = this.value;
                             updateFormatSelection();
                             updateDownloadButton();
                         });
-                        
+
                         audioFormatsContainer.appendChild(formatElement);
                     });
                 } else {
@@ -465,33 +465,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
+
     function startDownload() {
         if (!currentVideoInfo || !selectedFormat) {
             showError('Please select a format to download');
             return;
         }
-        
+
         // Update UI state
         isDownloading = true;
         updateDownloadButton();
-        
+
         // Show progress container
         progressContainer.style.display = 'block';
         progressBar.style.width = '0%';
         progressBar.setAttribute('aria-valuenow', '0');
         progressText.textContent = 'Starting download...';
-        
+
         // Hide any previous download complete alert
         downloadCompleteAlert.style.display = 'none';
-        
+
         // Prepare form data
         const formData = new FormData();
         formData.append('url', youtubeUrlInput.value.trim());
         formData.append('format', selectedFormat);
         formData.append('type', downloadType);
         formData.append('playlist', (isPlaylist === true).toString()); // Add safe boolean check
-        
+
         // Start download request
         fetch('/download', {
             method: 'POST',
@@ -520,13 +520,13 @@ document.addEventListener('DOMContentLoaded', function() {
             showError(error.message);
         });
     }
-    
+
     function checkDownloadProgress(downloadId) {
         // Clear any existing interval
         if (downloadCheckInterval) {
             clearInterval(downloadCheckInterval);
         }
-        
+
         // Check progress every 1 second
         downloadCheckInterval = setInterval(() => {
             fetch(`/download_status/${downloadId}`)
@@ -538,39 +538,66 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(status => {
                     updateProgressUI(status);
-                    
+
                     // If download is complete or failed, stop checking
                     if (status.status === 'complete' || status.status === 'error') {
                         clearInterval(downloadCheckInterval);
                         downloadCheckInterval = null;
                         isDownloading = false;
                         updateDownloadButton();
-                        
+
                         if (status.status === 'complete' && status.download_url) {
-                            // Show download complete message with link
+                            // Show download complete message with links
                             downloadCompleteAlert.style.display = 'block';
+
+                            // Set up main download link
                             downloadLink.href = status.download_url;
                             downloadLink.download = status.filename ? status.filename.split('/').pop() : 'youtube_download';
                             downloadLink.style.display = 'inline-block';
-                            
+                            downloadLink.classList.add('btn', 'btn-primary', 'mt-2', 'me-2');
+                            downloadLink.innerHTML = '<i class="bi bi-download me-2"></i>Download File';
+
                             // Update download button state
                             downloadButton.disabled = true;
                             downloadButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Download Complete';
-                            
-                            // Ensure download link is clickable
-                            downloadLink.classList.add('btn', 'btn-primary', 'mt-2', 'me-2');
-                            downloadLink.innerHTML = '<i class="bi bi-download me-2"></i>Download File';
-                            downloadLink.onclick = null; // Remove any previous handlers
+
+                            // Clear any existing buttons in download complete alert
+                            while (downloadCompleteAlert.lastChild) {
+                                downloadCompleteAlert.removeChild(downloadCompleteAlert.lastChild);
+                            }
+
+                            // Add success message
+                            const successMessage = document.createElement('div');
+                            successMessage.className = 'mb-3';
+                            successMessage.innerHTML = `
+                                <h5><i class="bi bi-check-circle me-2"></i>Download Complete!</h5>
+                                <p>Your file is ready to download.</p>
+                            `;
+                            downloadCompleteAlert.appendChild(successMessage);
+
+                            // Create button container
+                            const buttonContainer = document.createElement('div');
+                            buttonContainer.className = 'd-flex gap-2 flex-wrap';
+
+                            // Add download button
+                            const downloadBtn = document.createElement('a');
+                            downloadBtn.href = status.download_url;
+                            downloadBtn.download = status.filename ? status.filename.split('/').pop() : 'youtube_download';
+                            downloadBtn.className = 'btn btn-primary';
+                            downloadBtn.innerHTML = '<i class="bi bi-download me-2"></i>Download File';
+                            buttonContainer.appendChild(downloadBtn);
 
                             // Add direct link button
-                            const directLinkBtn = document.createElement('a');
-                            directLinkBtn.href = status.download_url;
-                            directLinkBtn.className = 'btn btn-secondary mt-2';
-                            directLinkBtn.innerHTML = '<i class="bi bi-link-45deg me-2"></i>Direct Link';
-                            directLinkBtn.target = '_blank';
-                            downloadCompleteAlert.appendChild(directLinkBtn);
+                            const directBtn = document.createElement('a');
+                            directBtn.href = status.download_url;
+                            directBtn.className = 'btn btn-secondary';
+                            directBtn.innerHTML = '<i class="bi bi-link-45deg me-2"></i>Direct Link';
+                            directBtn.target = '_blank';
+                            buttonContainer.appendChild(directBtn);
+
+                            downloadCompleteAlert.appendChild(buttonContainer);
                         }
-                        
+
                         if (status.status === 'error') {
                             showError(`Download failed: ${status.error || 'Unknown error'}`);
                         }
@@ -581,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         }, 1000);
     }
-    
+
     function updateProgressUI(status) {
         if (status.status === 'starting') {
             progressBar.style.width = '0%';
@@ -607,7 +634,7 @@ document.addEventListener('DOMContentLoaded', function() {
             progressText.textContent = `Error: ${status.error || 'Unknown error'}`;
         }
     }
-    
+
     function updateFormatSelection() {
         // Update the active class for video formats
         document.querySelectorAll('#video-formats .format-select').forEach(el => {
@@ -618,7 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.classList.remove('active');
             }
         });
-        
+
         // Update the active class for audio formats
         document.querySelectorAll('#audio-formats .format-select').forEach(el => {
             const input = el.querySelector('input');
@@ -629,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     function updateDownloadButton() {
         if (downloadButton) {
             if (isDownloading) {
@@ -640,27 +667,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 downloadButton.textContent = 'Select a format';
             } else {
                 downloadButton.disabled = false;
-                
+
                 // Set button text based on download type and playlist status
                 let buttonText = 'Download';
-                
+
                 // Make sure isPlaylist is a boolean
                 if (isPlaylist === true) {
                     buttonText += ' Playlist';
                 }
-                
+
                 // Check download type
                 if (downloadType && downloadType === 'audio') {
                     buttonText += ' Audio';
                 } else {
                     buttonText += ' Video';
                 }
-                
+
                 downloadButton.textContent = buttonText;
             }
         }
     }
-    
+
     function showError(message) {
         if (errorContainer) {
             errorContainer.innerHTML = `
@@ -674,62 +701,62 @@ document.addEventListener('DOMContentLoaded', function() {
             alert(message);
         }
     }
-    
+
     function resetUI() {
         // Hide video info
         videoInfoContainer.style.display = 'none';
-        
+
         // Hide video details
         if (videoDetailsContainer) {
             videoDetailsContainer.style.display = 'none';
         }
-        
+
         // Hide playlist info
         if (playlistInfoContainer) {
             playlistInfoContainer.style.display = 'none';
         }
-        
+
         // Hide error container
         if (errorContainer) {
             errorContainer.style.display = 'none';
         }
-        
+
         // Hide progress container
         progressContainer.style.display = 'none';
-        
+
         // Hide download complete alert
         downloadCompleteAlert.style.display = 'none';
-        
+
         // Reset global variables
         selectedFormat = null;
         isDownloading = false;
         isPlaylist = false;
-        
+
         // Clear any running interval
         if (downloadCheckInterval) {
             clearInterval(downloadCheckInterval);
             downloadCheckInterval = null;
         }
     }
-    
+
     // Utility Functions
     function formatDuration(seconds) {
         if (!seconds) return '0:00';
-        
+
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = Math.floor(seconds % 60);
-        
+
         if (hours > 0) {
             return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         } else {
             return `${minutes}:${String(secs).padStart(2, '0')}`;
         }
     }
-    
+
     function formatViews(views) {
         if (!views) return '0 views';
-        
+
         if (views >= 1000000) {
             return `${(views / 1000000).toFixed(1)}M views`;
         } else if (views >= 1000) {
