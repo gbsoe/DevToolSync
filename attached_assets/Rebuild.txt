@@ -1,0 +1,61 @@
+1. **Architecture & Dependencies**  
+   - Run everything in one Flask server process on a single port—no separate static/JS servers or extra Node.js processes.  
+   - Use only **Flask** and a Python YouTube extraction library (**pytube** or **yt-dl-pytube**).  
+   - No FFmpeg, no server-side file storage, no additional frameworks.
+
+2. **Core Routes & Workflows**  
+   - `GET /`  
+     • Render an HTML form via Jinja2 where the user pastes a YouTube URL.  
+     • Display flash messages for errors/status updates.  
+   - `POST /info`  
+     • Read the submitted `url` form field.  
+     • Use the extraction library to fetch the video’s title and all **progressive** streams.  
+     • For each stream, obtain:  
+       - `itag` (format identifier)  
+       - `mime_type` (e.g. `video/mp4`)  
+       - `resolution` or `quality_label`  
+       - The fully deciphered direct URL (`https://…googlevideo.com/videoplayback?...`) using the library’s built-in cipher logic.  
+     • Pass the title and list of stream objects to a “streams” template.  
+   - `GET /download`  
+     • Accept query parameters `url` (the original YouTube link) and `itag`.  
+     • Re-derive the same direct videoplayback URL for that itag with the extraction library.  
+     • Return an **HTTP 302 Redirect** to that direct URL.
+
+3. **Template Logic**  
+   - **Index Template** (`index.html`):  
+     - Form to submit a YouTube URL.  
+     - Display any flash messages.  
+     - Footer disclaimer reminding users to respect YouTube’s Terms of Service and copyright.  
+   - **Streams Template** (`streams.html`):  
+     - Show the video title.  
+     - Table listing each available stream (resolution + MIME type).  
+     - Each row has a **Download** link pointing to `/download?url=…&itag=…` with `target="_blank"` so it opens in a new tab.  
+     - A “Back” link to return to the index.
+
+4. **“Open in New Window” Download Behavior**  
+   - Your `/download` route issues a **302** redirect to the signed `googlevideo.com/videoplayback?...` link.  
+   - The frontend’s `<a href="/download?…" target="_blank">Download</a>` (or equivalent JS `window.open`) causes the browser to fetch the video directly from YouTube’s CDN.  
+   - The browser’s native video UI then offers right-click “Save video as…”—no proxying or server bandwidth for the video file.  
+
+5. **Error Handling & UX**  
+   - Flash user-friendly errors on failures (e.g. “Invalid URL” or “Unable to fetch streams”).  
+   - Display a simple “Loading…” message while metadata is fetched (can be a brief redirect to an interstitial template).
+
+6. **Security & Performance**  
+   - Do not cache or store any downloaded files.  
+   - Optionally enforce a maximum number of streams or file size to prevent abuse.  
+   - Rely on the extraction library for expiring signatures to ensure direct URLs expire naturally.
+
+7. **Project Structure**
+
+tube2go/ │ ├── app.py            # Single Flask application
+├── requirements.txt  # Flask + pytube (or yt-dl-pytube)
+└── templates/
+├── index.html
+└── streams.html
+
+8. **Legal Disclaimer**  
+- In the footer of every page:  
+  > “Download only videos you own or have permission to use—respect YouTube’s Terms of Service and copyright.”
+
+Please outline or generate a complete plan following this logic—no server-side media handling, purely direct-open of YouTube’s signed playback URLs via Flask.
