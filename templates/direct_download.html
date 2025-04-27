@@ -32,7 +32,7 @@
                                 
                                 <!-- Direct Download Button -->
                                 <div class="mb-4">
-                                    <a href="{{ direct_url }}" download="{{ filename }}" class="btn btn-success btn-lg d-block btn-download-primary" id="download-button">
+                                    <a href="{{ direct_url }}" class="btn btn-success btn-lg d-block btn-download-primary" id="download-button">
                                         <i class="bi bi-download me-2"></i>Download Now
                                     </a>
                                     <div class="text-center mt-2">
@@ -42,7 +42,7 @@
                                 
                                 <!-- Alternative download method -->
                                 <div class="text-center mb-4">
-                                    <a href="/process-download?url={{ direct_url|urlencode }}&filename={{ filename|urlencode }}" class="btn btn-outline-primary">
+                                    <a href="{{ direct_url }}&redirect=true" class="btn btn-outline-primary">
                                         <i class="bi bi-arrow-down-circle me-2"></i>Alternative Download Method
                                     </a>
                                 </div>

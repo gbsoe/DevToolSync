@@ -220,12 +220,15 @@ def generate_download_file_url(youtube_url, format_id, download_type='video'):
     base_url = "/download-file"
     
     # Generate random timestamp to avoid caching issues
-    timestamp = int(time.time())
+    timestamp = int(time.time()) 
+    
+    # Add a random ID to further prevent caching issues
+    random_id = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=8))
     
     # Build the URL to our direct file download endpoint
     if download_type == 'audio':
         # For audio downloads
-        return f"{base_url}?v={video_id}&format={format_id}&type=audio&_t={timestamp}"
+        return f"{base_url}?v={video_id}&format={format_id}&type=audio&_t={timestamp}&r={random_id}"
     else:
         # For video downloads
-        return f"{base_url}?v={video_id}&format={format_id}&type=video&_t={timestamp}"
+        return f"{base_url}?v={video_id}&format={format_id}&type=video&_t={timestamp}&r={random_id}"
