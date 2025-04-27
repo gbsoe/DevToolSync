@@ -2,7 +2,7 @@ import os
 import logging
 import datetime
 import time
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory, send_file, make_response
 from werkzeug.utils import secure_filename
 import urllib.parse
 
@@ -130,16 +130,16 @@ def direct_download():
         extension = 'mp4' if download_type == 'video' else 'mp3'
         
         # Create appropriate headers for direct download
-        headers = {
-            'Content-Type': 'application/octet-stream',
-            'Content-Disposition': f'attachment; filename="{safe_title}.{extension}"'
-        }
+        # These headers will tell the browser this is a file download
+        response = make_response(redirect(direct_url))
+        response.headers['Content-Type'] = 'application/octet-stream'
+        response.headers['Content-Disposition'] = f'attachment; filename="{safe_title}.{extension}"'
         
         # Log the success
         logger.info(f"Successfully generated direct download URL for {video_id}")
         
-        # Redirect to the direct URL with the proper headers
-        return redirect(direct_url)
+        # Return the response with proper headers to force download
+        return response
         
     except Exception as e:
         logger.error(f"Error generating direct download: {str(e)}")
