@@ -13,7 +13,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="theme-color" content="#343a40">
-    <meta name="monetag" content="cdc878ddc9c8ee80ea2f1d8bcf003f94">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="{{ title|default(default_title) }}">
@@ -46,9 +45,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID"
-     crossorigin="anonymous"></script>
+    <!-- AdSense removed -->
     
     <!-- Favicon -->
     <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>▶️</text></svg>" type="image/svg+xml">
@@ -285,7 +282,7 @@
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     
-    <!-- MonetAG Adsense Script -->
+    <!-- Service Worker Registration (MonetAG disabled) -->
     <script>
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
