@@ -50,6 +50,20 @@ def index():
     """Main page with the video download form"""
     # Record site visit for statistics
     Statistics.record_visit()
+    
+    # Check if we have a URL in the query parameters (for direct one-click flow)
+    video_url = request.args.get('url', '')
+    
+    if video_url:
+        # If URL is provided, automatically process it and go to watch page
+        try:
+            video_id = get_video_id(video_url)
+            if video_id:
+                return redirect(f'/watch?v={video_id}')
+        except Exception as e:
+            logger.error(f"Error processing direct URL: {str(e)}")
+            flash(f"Error processing URL: {str(e)}", 'danger')
+    
     return render_template('index.html')
     
 @app.route('/direct-download')

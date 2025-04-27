@@ -134,6 +134,32 @@
         margin-right: 10px;
         color: #333;
     }
+    
+    /* Enhanced download button styles */
+    .download-item {
+        transition: all 0.2s ease;
+    }
+    
+    .download-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .download-now-badge {
+        font-weight: bold;
+        transition: all 0.2s ease;
+    }
+    
+    .download-item:hover .download-now-badge {
+        background-color: #198754 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* Browser support message */
+    .browser-support-warning {
+        display: none;
+        margin-top: 15px;
+    }
 </style>
 {% endblock %}
 
@@ -234,7 +260,12 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Include the download helper script -->
+<script src="{{ url_for('static', filename='js/download-helper.js') }}"></script>
 <script>
+    // Check browser support for the advanced download functionality
+    const hasAdvancedDownloadSupport = checkBrowserSupport();
+    
     // Download Menu Functionality
     const downloadTrigger = document.getElementById('download-trigger');
     const downloadMenu = document.getElementById('download-menu');
@@ -261,9 +292,20 @@
         }
     });
     
-    // Download function
+    // Enhanced direct download function
     function downloadVideo(url) {
-        window.location.href = url;
+        const videoTitle = "{{ title | default('youtube_video') }}";
+        const fileName = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.mp4';
+        
+        if (hasAdvancedDownloadSupport) {
+            // Use the advanced download with progress
+            fetchAndDownloadFile(url, fileName, (progress) => {
+                console.log(`Download progress: ${progress}%`);
+            });
+        } else {
+            // Fallback to simple redirect
+            window.location.href = url;
+        }
     }
     
     // Picture-in-picture function
@@ -288,47 +330,72 @@
             videoElement.playbackRate = speeds[nextIndex];
             
             // Show a notification about speed change
-            alert(`Playback speed: ${speeds[nextIndex]}x`);
+            showSuccessToast(`Playback speed: ${speeds[nextIndex]}x`);
         }
     }
     
-    // If using iframe, we can't control it directly, these functions will be limited
-    // For a production app, consider using the YouTube Player API for more control
-    
-    // Enhance direct download links with proper download attributes
+    // Enhanced direct download links
     document.querySelectorAll('a[download]').forEach(link => {
+        const originalUrl = link.getAttribute('href');
+        const format = link.querySelector('.badge').textContent.trim();
+        const isVideo = link.querySelector('i').classList.contains('bi-file-earmark-play');
+        const extension = isVideo ? 'mp4' : 'mp3';
+        
+        // Get video title and clean it for a filename
+        const videoTitle = "{{ title | default('youtube_video') }}";
+        const safeTitle = videoTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const fileName = `${safeTitle}_${format}.${extension}`;
+        
+        // Add enhanced download functionality for modern browsers
         link.addEventListener('click', function(e) {
-            // Track download start
-            console.log('Download initiated:', this.getAttribute('href'));
-            
-            // Add a small delay to ensure proper download header processing
-            setTimeout(() => {
-                // Show a notification that download started
-                const downloadToast = document.createElement('div');
-                downloadToast.className = 'position-fixed bottom-0 end-0 p-3';
-                downloadToast.style.zIndex = '5';
-                downloadToast.innerHTML = `
-                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="toast-header bg-success text-white">
-                            <i class="bi bi-download me-2"></i>
-                            <strong class="me-auto">Download Started</strong>
-                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close" onclick="this.parentNode.parentNode.parentNode.remove()"></button>
-                        </div>
-                        <div class="toast-body">
-                            Your download has started. If it doesn't begin automatically, click the link again.
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(downloadToast);
+            if (hasAdvancedDownloadSupport) {
+                e.preventDefault(); // Prevent default navigation
                 
-                // Auto-remove after 5 seconds
-                setTimeout(() => {
-                    if (downloadToast.parentNode) {
-                        downloadToast.remove();
-                    }
-                }, 5000);
-            }, 500);
+                // Log the download attempt
+                console.log('Direct download initiated:', originalUrl);
+                
+                // Use our enhanced download with progress
+                fetchAndDownloadFile(originalUrl, fileName, (progress) => {
+                    console.log(`Download progress: ${progress}%`);
+                });
+            } else {
+                // For browsers that don't support our advanced method,
+                // we'll just use the default download behavior
+                console.log('Using simple download for this browser');
+                // No preventDefault() here - let the link work normally
+            }
         });
+        
+        // Add classes for styling
+        link.classList.add('download-item');
+        const badge = link.querySelector('.badge.bg-success');
+        if (badge) {
+            badge.classList.add('download-now-badge');
+        }
     });
+    
+    // Show browser support warning if needed
+    if (!hasAdvancedDownloadSupport) {
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'alert alert-warning browser-support-warning';
+        warningDiv.innerHTML = `
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Your browser may not support advanced download features. If downloads don't start, try a newer browser like Chrome or Firefox.
+        `;
+        
+        const downloadSection = document.querySelector('.mt-4');
+        if (downloadSection) {
+            downloadSection.appendChild(warningDiv);
+            warningDiv.style.display = 'block';
+        }
+    }
+    
+    // Update download menu option
+    const menuDownloadOption = document.querySelector('.download-menu-option');
+    if (menuDownloadOption) {
+        menuDownloadOption.innerHTML = `
+            <i class="bi bi-download"></i> Download Now
+        `;
+    }
 </script>
 {% endblock %}

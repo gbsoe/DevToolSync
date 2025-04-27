@@ -33,15 +33,18 @@
                     <h3 class="h5 mb-0">Download Any YouTube Video or Audio Now</h3>
                 </div>
                 <div class="card-body">
-                    <form id="youtube-form" aria-label="YouTube downloader form">
+                    <form id="youtube-form" action="/download" method="POST" aria-label="YouTube downloader form">
                         <div class="url-input-container mb-4">
                             <label for="youtube-url" class="form-label">Enter YouTube URL</label>
-                            <input type="url" class="form-control form-control-lg" id="youtube-url" 
+                            <input type="url" class="form-control form-control-lg" id="youtube-url" name="url"
                                    placeholder="https://www.youtube.com/watch?v=..." required
                                    aria-describedby="url-help">
                             <i class="bi bi-link-45deg" aria-hidden="true"></i>
                             <div id="url-help" class="form-text">Paste any YouTube video or playlist link here</div>
                         </div>
+                        <!-- Hidden inputs for form submission -->
+                        <input type="hidden" name="format" id="format-id" value="22">
+                        <input type="hidden" name="type" id="download-type" value="video">
                         
                         <!-- Download Options (moved here) -->
                         <div id="video-info" class="card video-info-card mb-4">
@@ -91,7 +94,7 @@
                         
                         <div class="d-grid gap-2 mt-3">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-search me-2" aria-hidden="true"></i>Get Video Info
+                                <i class="bi bi-download me-2" aria-hidden="true"></i>Download Video
                             </button>
                         </div>
                         
