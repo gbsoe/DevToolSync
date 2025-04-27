@@ -50,21 +50,38 @@ def index():
     """Main page with the video download form"""
     # Record site visit for statistics
     Statistics.record_visit()
-    
-    # Check if we have a URL in the query parameters (for direct one-click flow)
-    video_url = request.args.get('url', '')
-    
-    if video_url:
-        # If URL is provided, automatically process it and go to watch page
-        try:
-            video_id = get_video_id(video_url)
-            if video_id:
-                return redirect(f'/watch?v={video_id}')
-        except Exception as e:
-            logger.error(f"Error processing direct URL: {str(e)}")
-            flash(f"Error processing URL: {str(e)}", 'danger')
-    
     return render_template('index.html')
+
+@app.route('/direct-url-process')
+def direct_url_process():
+    """Process a YouTube URL directly and redirect to watch page (2-page workflow)"""
+    # Get parameters from the form
+    url = request.args.get('url', '')
+    format_id = request.args.get('format', '22')  # Default to 720p
+    
+    # Set download type based on format (140 is audio format)
+    download_type = 'audio' if format_id == '140' else 'video'
+    
+    if not url:
+        flash('Please enter a valid YouTube URL', 'danger')
+        return redirect(url_for('index'))
+    
+    try:
+        # Extract video ID
+        video_id = get_video_id(url)
+        if not video_id:
+            flash('Invalid YouTube URL. Please check and try again.', 'danger')
+            return redirect(url_for('index'))
+        
+        # Log the direct processing
+        logger.info(f"Direct URL processing: {url}, format: {format_id}, type: {download_type}")
+        
+        # Redirect directly to the watch page (this creates the 2-page experience)
+        return redirect(url_for('watch_video', v=video_id, format=format_id, type=download_type))
+    except Exception as e:
+        logger.error(f"Error processing URL: {str(e)}")
+        flash(f"Error processing URL: {str(e)}", 'danger')
+        return redirect(url_for('index'))
     
 @app.route('/direct-download')
 def direct_download():
