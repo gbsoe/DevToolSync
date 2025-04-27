@@ -190,18 +190,18 @@ def get_default_formats(url, sample=False):
     }
 
 def generate_clipto_url(youtube_url, format_id, download_type='video'):
-    """Generate a Clipto-style direct download URL"""
+    """Generate a direct download URL"""
     video_id = get_video_id(youtube_url)
     if not video_id:
         raise ValueError("Invalid YouTube URL")
     
-    # Generate direct download URLs (no actual server-side processing)
-    base_url = "https://www.youtube.com/watch"
+    # Instead of redirecting to YouTube, now we'll use our own endpoint
+    base_url = "/direct-download"
     
-    # Use Y2mate style URL patterns (they use a similar client-side approach)
+    # Build the URL to our internal endpoint
     if download_type == 'audio':
-        # For audio downloads - set audiomode parameter
-        return f"{base_url}?v={video_id}&itag={format_id}&audiomode=1"
+        # For audio downloads
+        return f"{base_url}?v={video_id}&format={format_id}&type=audio"
     else:
         # For video downloads
-        return f"{base_url}?v={video_id}&itag={format_id}"
+        return f"{base_url}?v={video_id}&format={format_id}&type=video"

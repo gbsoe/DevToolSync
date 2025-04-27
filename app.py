@@ -8,6 +8,7 @@ import urllib.parse
 
 # Import our modules
 from youtube_link_utils import get_video_info as get_yt_info, generate_clipto_url, get_video_id
+from downloader import YoutubeDownloader
 from cache_manager import CacheManager
 from models import db, Download, Statistics
 
@@ -51,6 +52,50 @@ def index():
     Statistics.record_visit()
     return render_template('index.html')
     
+@app.route('/direct-download')
+def direct_download():
+    """Directly download a YouTube video or audio file"""
+    video_id = request.args.get('v', '')
+    format_id = request.args.get('format', '18')  # Default to medium quality
+    download_type = request.args.get('type', 'video')  # Default to video
+    
+    if not video_id:
+        return redirect('/')
+    
+    try:
+        # Create a YouTube URL from the video ID
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        
+        # Initialize the YouTube downloader
+        downloader = YoutubeDownloader()
+        
+        # Get the direct download URL
+        direct_url = downloader.get_direct_url(url, format_id, download_type)
+        
+        # Get video info to help set the filename
+        video_info = get_yt_info(url)
+        title = video_info.get('title', f'youtube_{video_id}')
+        
+        # Clean up the title for use as a filename
+        safe_title = secure_filename(title).replace(' ', '_')
+        
+        # Set the appropriate extension
+        extension = 'mp4' if download_type == 'video' else 'mp3'
+        
+        # Create appropriate headers for direct download
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Content-Disposition': f'attachment; filename="{safe_title}.{extension}"'
+        }
+        
+        # Redirect to the direct URL with the proper headers
+        return redirect(direct_url)
+        
+    except Exception as e:
+        logger.error(f"Error generating direct download: {str(e)}")
+        flash(f"Error: {str(e)}", 'danger')
+        return redirect('/')
+
 @app.route('/faq')
 def faq():
     """Frequently Asked Questions page"""

@@ -244,6 +244,55 @@ class YoutubeDownloader:
             logger.error(f"Error downloading video: {str(e)}")
             raise
 
+    def get_direct_url(self, url, format_id='best', download_type='video'):
+        """Get a direct download URL for a video without actually downloading it"""
+        try:
+            logger.info(f"Getting direct URL for: {url} with format: {format_id}")
+            
+            # Always ensure we have fresh cookies for each request
+            ensure_fresh_cookies()
+            
+            # Set the appropriate format based on the download type
+            format_spec = format_id
+            if download_type == 'audio':
+                # For audio, use the specific audio format or fallback to bestaudio
+                format_spec = f"{format_id}/bestaudio/best"
+            
+            # Enhanced options with better browser simulation
+            options = {
+                'format': format_spec,
+                'quiet': True,
+                'skip_download': True,
+                'cookiefile': 'cookies.txt',
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'ignoreerrors': True
+            }
+            
+            # Try to get info with enhanced options and cookies
+            with yt_dlp.YoutubeDL(options) as ydl:
+                info = ydl.extract_info(url, download=False)
+                if not info:
+                    raise Exception("Could not retrieve video information")
+                
+                # Get the URL for the selected format
+                if 'url' in info:
+                    return info['url']
+                elif 'formats' in info:
+                    for fmt in info['formats']:
+                        if fmt.get('format_id') == format_id:
+                            return fmt.get('url')
+                    
+                    # If format not found, get the best available format
+                    if info['formats'] and 'url' in info['formats'][0]:
+                        return info['formats'][0]['url']
+            
+            raise Exception("Could not find a direct download URL")
+            
+        except Exception as e:
+            logger.error(f"Error getting direct URL: {str(e)}")
+            raise Exception(f"Could not generate direct download URL: {str(e)}")
+    
     def download_audio(self, url, output_path=None, progress_hook=None, playlist=False):
         try:
             logger.info(f"Starting audio download for URL: {url}")
