@@ -22,7 +22,7 @@ def generate_session_token():
 
 def get_youtube_cookies_with_user_agent():
     """Make a request to YouTube with various User-Agents to gather valid cookies"""
-    # List of common user agents to rotate through
+    # List of common modern user agents to rotate through
     user_agents = [
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Safari/605.1.15',
@@ -32,6 +32,13 @@ def get_youtube_cookies_with_user_agent():
     ]
     
     all_cookies = {}
+    youtube_urls = [
+        'https://www.youtube.com/',
+        'https://www.youtube.com/feed/explore',
+        'https://www.youtube.com/feed/trending',
+        'https://www.youtube.com/feed/subscriptions',
+        'https://www.youtube.com/results?search_query=music'
+    ]
     
     # Try different user agents to get a variety of cookies
     for user_agent in user_agents:
@@ -48,23 +55,35 @@ def get_youtube_cookies_with_user_agent():
                 'Sec-Fetch-Mode': 'navigate',
                 'Sec-Fetch-Site': 'none',
                 'Sec-Fetch-User': '?1',
+                # Add additional headers to look more like a real browser
+                'Cache-Control': 'max-age=0',
+                'TE': 'Trailers',
             }
             
-            logger.info(f"Fetching YouTube with User-Agent: {user_agent[:20]}...")
-            response = session.get('https://www.youtube.com/', headers=headers)
-            
-            if response.status_code == 200:
-                # Add cookies from this request to our collection
-                for cookie in session.cookies:
-                    if cookie.name not in all_cookies:
-                        all_cookies[cookie.name] = cookie
-                logger.info(f"Got {len(session.cookies)} cookies from YouTube request")
-            
-            # Try to access another page to gather more cookies
-            response = session.get('https://www.youtube.com/feed/explore', headers=headers)
+            # Visit multiple YouTube pages to gather more cookies
+            for i, url in enumerate(youtube_urls):
+                logger.info(f"Fetching {url} with User-Agent: {user_agent[:20]}...")
+                
+                # Add referrer for subsequent requests to appear more natural
+                if i > 0:
+                    headers['Referer'] = youtube_urls[i-1]
+                
+                response = session.get(url, headers=headers, timeout=10)
+                
+                if response.status_code == 200:
+                    # Add cookies from this request to our collection
+                    for cookie in session.cookies:
+                        if cookie.name not in all_cookies:
+                            all_cookies[cookie.name] = cookie
+                    logger.info(f"Got {len(session.cookies)} cookies from YouTube request to {url}")
+                    
+                    # Briefly sleep between requests to avoid triggering rate limits
+                    if i < len(youtube_urls) - 1:
+                        time.sleep(0.5)
         except Exception as e:
             logger.warning(f"Error getting cookies with user agent {user_agent[:20]}: {e}")
     
+    logger.info(f"Collected {len(all_cookies)} unique cookies from YouTube")
     return all_cookies
 
 def create_netscape_cookies_file():
@@ -153,15 +172,22 @@ def refresh_cookies():
             return False
 
 def ensure_fresh_cookies():
-    """Ensure cookies exist and are fresh (< 2 hours old)"""
+    """Ensure cookies exist and are fresh (< 30 minutes old)"""
     try:
-        # Check if cookie file exists and is less than 2 hours old
+        # Check if cookie file exists and is less than 30 minutes old (reduced from 2 hours)
+        # This helps avoid YouTube's bot detection by refreshing cookies more frequently
         if not os.path.exists(COOKIE_FILE) or \
-           os.path.getmtime(COOKIE_FILE) < (time.time() - 7200):
+           os.path.getmtime(COOKIE_FILE) < (time.time() - 1800):
             logger.info("Creating or refreshing cookie file")
             return refresh_cookies()
         logger.info("Using existing cookie file")
         return True
     except Exception as e:
         logger.error(f"Error checking cookies: {str(e)}")
-        return False
+        # If there's any error, try to refresh cookies anyway
+        try:
+            logger.info("Attempting to refresh cookies due to previous error")
+            return refresh_cookies()
+        except:
+            logger.error("Failed to refresh cookies after error")
+            return False

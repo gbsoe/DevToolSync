@@ -250,6 +250,7 @@ class YoutubeDownloader:
             logger.info(f"Getting direct URL for: {url} with format: {format_id}")
             
             # Always ensure we have fresh cookies for each request
+            # This is critical for preventing YouTube's "sign in to confirm you're not a bot" errors
             ensure_fresh_cookies()
             
             # Set the appropriate format based on the download type
@@ -261,16 +262,21 @@ class YoutubeDownloader:
                 # This allows yt-dlp to automatically select the next best format if the requested one isn't available
                 format_spec = f"{format_id}/best[height<=720]/best"
             
-            # Enhanced options with better browser simulation
+            # Enhanced options with better browser simulation to bypass bot detection
             options = {
                 'format': format_spec,
                 'quiet': False,  # Enable output for debugging
                 'skip_download': True,
                 'cookiefile': 'cookies.txt',
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'referer': 'https://www.youtube.com/',
+                # Use a more recent Chrome user agent
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'referer': 'https://www.youtube.com/feed/trending',
                 'ignoreerrors': False,  # Don't ignore errors to get better error messages
-                'verbose': True  # Enable verbose output
+                'verbose': True,  # Enable verbose output
+                # Additional anti-bot-detection parameters
+                'nocheckcertificate': True,
+                'geo_bypass': True,
+                'extractor_args': {'youtube': {'player_client': 'web'}}
             }
             
             # Try to get info with enhanced options and cookies

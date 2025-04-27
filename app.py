@@ -619,8 +619,20 @@ def process_download():
         return flask_response
         
     except Exception as e:
-        logger.error(f"Error processing download: {str(e)}")
-        flash(f"Error: {str(e)}", 'danger')
+        error_msg = str(e).lower()
+        logger.error(f"Error processing download: {error_msg}")
+        
+        # Provide a more user-friendly message for bot detection errors
+        if "sign in to confirm you're not a bot" in error_msg or "bot" in error_msg:
+            flash("YouTube has detected automated access. Please try again in a few moments as the system refreshes authentication.", 'warning')
+            # Force refresh cookies on bot detection errors
+            from cookie_manager import refresh_cookies
+            refresh_cookies()
+        elif "rate" in error_msg and ("exceeded" in error_msg or "limit" in error_msg):
+            flash("YouTube rate limit exceeded. Please wait a moment and try again.", 'warning')
+        else:
+            flash(f"Error: {str(e)}", 'danger')
+            
         return redirect('/')
 
 @app.route('/google07df394c40c0da6f.html')
@@ -728,8 +740,20 @@ def download_file():
         return flask_response
         
     except Exception as e:
-        logger.error(f"Error in download_file: {str(e)}")
-        flash(f"Error: {str(e)}", "danger")
+        error_msg = str(e).lower()
+        logger.error(f"Error in download_file: {error_msg}")
+        
+        # Provide a more user-friendly message for bot detection errors
+        if "sign in to confirm you're not a bot" in error_msg or "bot" in error_msg:
+            flash("YouTube has detected automated access. Please try again in a few moments as the system refreshes authentication.", 'warning')
+            # Force refresh cookies on bot detection errors
+            from cookie_manager import refresh_cookies
+            refresh_cookies()
+        elif "rate" in error_msg and ("exceeded" in error_msg or "limit" in error_msg):
+            flash("YouTube rate limit exceeded. Please wait a moment and try again.", 'warning')
+        else:
+            flash(f"Error: {str(e)}", 'danger')
+            
         return redirect(f'/watch?v={video_id}')
 
 @app.route('/privacy')
