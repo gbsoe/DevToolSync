@@ -97,6 +97,11 @@ def download_video():
         return redirect(url_for('index'))
     
     try:
+        # Extract video ID for redirection to watch page
+        video_id = get_video_id(url)
+        if not video_id:
+            raise ValueError("Could not extract video ID from the URL")
+            
         # Get client IP (anonymize it for privacy)
         ip_address = request.remote_addr
         if ip_address:
@@ -120,18 +125,122 @@ def download_video():
         # Record download in statistics
         Statistics.record_download(download_type)
         
-        # Generate direct download URL
-        direct_url = generate_clipto_url(url, format_id, download_type)
-        
-        return jsonify({
-            'status': 'complete',
-            'download_url': direct_url,
-            'message': 'Download link generated'
-        })
+        # If this is an AJAX request, return a JSON response
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # Generate direct download URL
+            direct_url = generate_clipto_url(url, format_id, download_type)
+            
+            return jsonify({
+                'status': 'complete',
+                'download_url': direct_url,
+                'message': 'Download link generated',
+                'watch_url': f'/watch?v={video_id}&format={format_id}&type={download_type}'
+            })
+        else:
+            # Redirect to the custom download page
+            return redirect(f'/watch?v={video_id}&format={format_id}&type={download_type}')
     
     except Exception as e:
         logger.error(f"Error generating download link: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/watch')
+def watch_video():
+    """Display video download page similar to the screenshot"""
+    video_id = request.args.get('v', '')
+    format_id = request.args.get('format', '18')  # Default to medium quality
+    download_type = request.args.get('type', 'video')  # Default to video
+    
+    if not video_id:
+        return redirect('/')
+    
+    # Reconstruct a YouTube URL
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    
+    try:
+        # Get video information
+        video_info = get_yt_info(url)
+        
+        # Generate direct download URLs for all formats
+        video_formats = []
+        if video_info.get('video_formats'):
+            for format in video_info['video_formats']:
+                format_size = format.get('filesize', 0)
+                size_str = format_readable_size(format_size)
+                
+                video_formats.append({
+                    'format': format.get('format', f"Video {format.get('resolution', '360p')}"),
+                    'format_id': format.get('format_id', '18'),
+                    'size': size_str,
+                    'download_url': generate_clipto_url(url, format.get('format_id', '18'))
+                })
+        
+        audio_formats = []
+        if video_info.get('audio_formats'):
+            for format in video_info['audio_formats']:
+                format_size = format.get('filesize', 0)
+                size_str = format_readable_size(format_size)
+                
+                audio_formats.append({
+                    'format': format.get('format', f"Audio {format.get('abr', '128kbps')}"),
+                    'format_id': format.get('format_id', '140'),
+                    'size': size_str,
+                    'download_url': generate_clipto_url(url, format.get('format_id', '140'), 'audio')
+                })
+        
+        # Format the video duration
+        duration_str = "0:00"
+        if video_info.get('duration'):
+            minutes, seconds = divmod(video_info['duration'], 60)
+            hours, minutes = divmod(minutes, 60)
+            if hours > 0:
+                duration_str = f"{hours}:{minutes:02d}:{seconds:02d}"
+            else:
+                duration_str = f"{minutes}:{seconds:02d}"
+        
+        # Get the primary download URL for the requested format
+        if download_type == 'audio':
+            primary_download_url = generate_clipto_url(url, format_id, 'audio')
+        else:
+            primary_download_url = generate_clipto_url(url, format_id)
+            
+        # Create an embed URL (can't directly embed YouTube videos, but we'll use a workaround)
+        embed_url = f"https://www.youtube.com/embed/{video_id}?autoplay=1&controls=1&rel=0"
+        
+        return render_template('download.html',
+                              title=video_info.get('title', 'YouTube Video'),
+                              video_id=video_id,
+                              embed_url=embed_url,
+                              download_url=primary_download_url,
+                              duration=duration_str,
+                              video_formats=video_formats,
+                              audio_formats=audio_formats)
+                              
+    except Exception as e:
+        logger.error(f"Error preparing download page: {str(e)}")
+        flash(f"Error: {str(e)}", 'danger')
+        return redirect('/')
+        
+def format_readable_size(size_bytes):
+    """Convert bytes to a human-readable format"""
+    if size_bytes is None or size_bytes == 0:
+        return "Unknown size"
+        
+    # Define units and their thresholds
+    units = ['B', 'KB', 'MB', 'GB', 'TB']
+    size = float(size_bytes)
+    unit_index = 0
+    
+    # Convert to larger units as needed
+    while size >= 1024 and unit_index < len(units) - 1:
+        size /= 1024
+        unit_index += 1
+    
+    # Format with appropriate precision
+    if unit_index == 0:
+        return f"{int(size)} {units[unit_index]}"
+    else:
+        return f"{size:.1f} {units[unit_index]}"
 
 @app.route('/error')
 def error_page():

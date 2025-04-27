@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isDownloading = false;
             updateDownloadButton();
             
-            if (data.download_url) {
+            if (data.watch_url) {
                 // Show download complete message
                 downloadCompleteAlert.style.display = 'block';
                 
@@ -558,15 +558,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 downloadButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Download Ready';
                 downloadButton.disabled = false;
                 
-                // Set download link
+                // Set the download link to our custom watch page
                 const downloadLinkElem = document.getElementById('download-link');
                 if (downloadLinkElem) {
-                    downloadLinkElem.href = data.download_url;
+                    downloadLinkElem.href = data.watch_url;
                     downloadLinkElem.setAttribute('target', '_blank');
                 }
                 
-                // Open the link in a new window/tab
-                window.open(data.download_url, '_blank');
+                // Open our custom download page in a new window/tab
+                window.open(data.watch_url, '_blank');
                 
                 // Show completed status
                 showSuccess('Download link ready! Opening in a new tab...');

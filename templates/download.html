@@ -1,0 +1,278 @@
+{% extends 'layout.html' %}
+
+{% block title %}Download {{ title }} - Fast YouTube Downloader{% endblock %}
+
+{% block extra_head %}
+<style>
+    .video-container {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        background-color: #000;
+        margin-bottom: 20px;
+    }
+    
+    .video-container iframe, 
+    .video-container video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    
+    .download-options {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        position: absolute;
+        bottom: 80px;
+        right: 20px;
+        z-index: 100;
+        max-width: 300px;
+    }
+    
+    .download-button {
+        display: flex;
+        align-items: center;
+        background-color: #fff;
+        color: #333;
+        border: none;
+        border-radius: 4px;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-weight: 500;
+        margin-bottom: 8px;
+        transition: all 0.2s;
+        width: 100%;
+        text-align: left;
+    }
+    
+    .download-button:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .download-button i {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+    
+    .controls-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+    }
+    
+    .video-time {
+        font-size: 14px;
+    }
+    
+    .playback-controls {
+        display: flex;
+        gap: 20px;
+    }
+    
+    .control-button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    
+    .progress-bar {
+        position: absolute;
+        bottom: 60px;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background-color: rgba(255,255,255,0.2);
+    }
+    
+    .progress {
+        height: 100%;
+        background-color: #ff0000;
+        width: 0%;
+    }
+    
+    .download-menu {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        min-width: 250px;
+    }
+    
+    .download-menu-option {
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .download-menu-option:last-child {
+        border-bottom: none;
+    }
+    
+    .download-menu-option:hover {
+        background-color: #f9f9f9;
+    }
+    
+    .download-menu-option i {
+        margin-right: 10px;
+        color: #333;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-3 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h4 mb-3">{{ title }}</h1>
+            
+            <div class="video-container">
+                <!-- Video Element -->
+                <iframe id="video-player" src="{{ embed_url }}" allowfullscreen></iframe>
+                
+                <!-- Video Controls -->
+                <div class="progress-bar">
+                    <div class="progress" id="progress-bar"></div>
+                </div>
+                
+                <div class="controls-overlay">
+                    <div class="video-time">
+                        <span id="current-time">0:00</span> / <span id="duration">{{ duration }}</span>
+                    </div>
+                    
+                    <div class="playback-controls">
+                        <button class="control-button" id="download-trigger">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Download Menu (hidden by default) -->
+            <div class="download-menu" id="download-menu">
+                <div class="download-menu-option" onclick="downloadVideo('{{ download_url }}')">
+                    <i class="bi bi-download"></i> Download
+                </div>
+                <div class="download-menu-option" onclick="togglePlaybackSpeed()">
+                    <i class="bi bi-speedometer2"></i> Playback speed
+                </div>
+                <div class="download-menu-option" onclick="togglePictureInPicture()">
+                    <i class="bi bi-pip"></i> Picture-in-picture
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h2 class="h5">Download Options</h2>
+                <div class="list-group">
+                    {% for format in video_formats %}
+                    <a href="{{ format.download_url }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-file-earmark-play me-2"></i>
+                            {{ format.format }}
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ format.size }}</span>
+                    </a>
+                    {% endfor %}
+                    
+                    {% for format in audio_formats %}
+                    <a href="{{ format.download_url }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-file-earmark-music me-2"></i>
+                            {{ format.format }}
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ format.size }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <a href="/" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Download Menu Functionality
+    const downloadTrigger = document.getElementById('download-trigger');
+    const downloadMenu = document.getElementById('download-menu');
+    
+    downloadTrigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Position the menu near the button
+        const rect = downloadTrigger.getBoundingClientRect();
+        downloadMenu.style.top = `${rect.bottom + 10}px`;
+        downloadMenu.style.right = `20px`;
+        
+        // Toggle visibility
+        if (downloadMenu.style.display === 'block') {
+            downloadMenu.style.display = 'none';
+        } else {
+            downloadMenu.style.display = 'block';
+        }
+    });
+    
+    // Close menu when clicking elsewhere
+    document.addEventListener('click', function(e) {
+        if (!downloadTrigger.contains(e.target) && !downloadMenu.contains(e.target)) {
+            downloadMenu.style.display = 'none';
+        }
+    });
+    
+    // Download function
+    function downloadVideo(url) {
+        window.location.href = url;
+    }
+    
+    // Picture-in-picture function
+    function togglePictureInPicture() {
+        const videoElement = document.querySelector('video');
+        if (document.pictureInPictureElement) {
+            document.exitPictureInPicture();
+        } else if (videoElement) {
+            videoElement.requestPictureInPicture();
+        }
+    }
+    
+    // Playback speed function
+    function togglePlaybackSpeed() {
+        const videoElement = document.querySelector('video');
+        if (videoElement) {
+            const currentSpeed = videoElement.playbackRate;
+            // Cycle through common playback speeds
+            const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+            const currentIndex = speeds.indexOf(currentSpeed);
+            const nextIndex = (currentIndex + 1) % speeds.length;
+            videoElement.playbackRate = speeds[nextIndex];
+            
+            // Show a notification about speed change
+            alert(`Playback speed: ${speeds[nextIndex]}x`);
+        }
+    }
+    
+    // If using iframe, we can't control it directly, these functions will be limited
+    // For a production app, consider using the YouTube Player API for more control
+</script>
+{% endblock %}
