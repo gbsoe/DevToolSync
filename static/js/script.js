@@ -561,41 +561,22 @@ document.addEventListener('DOMContentLoaded', function() {
                             downloadButton.disabled = true;
                             downloadButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Download Complete';
 
-                            // Clear any existing buttons in download complete alert
-                            while (downloadCompleteAlert.lastChild) {
-                                downloadCompleteAlert.removeChild(downloadCompleteAlert.lastChild);
-                            }
-
-                            // Add success message
-                            const successMessage = document.createElement('div');
-                            successMessage.className = 'mb-3';
-                            successMessage.innerHTML = `
-                                <h5><i class="bi bi-check-circle me-2"></i>Download Complete!</h5>
-                                <p>Your file is ready to download.</p>
+                            // Update download complete alert content
+                            downloadCompleteAlert.innerHTML = `
+                                <div class="mb-3">
+                                    <h5><i class="bi bi-check-circle me-2"></i>Download Complete!</h5>
+                                    <p>Your file is ready to download.</p>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="${status.download_url}" download class="btn btn-primary">
+                                        <i class="bi bi-download me-2"></i>Download File
+                                    </a>
+                                    <a href="${status.download_url}" target="_blank" class="btn btn-secondary">
+                                        <i class="bi bi-link-45deg me-2"></i>Direct Link
+                                    </a>
+                                </div>
                             `;
-                            downloadCompleteAlert.appendChild(successMessage);
-
-                            // Create button container
-                            const buttonContainer = document.createElement('div');
-                            buttonContainer.className = 'd-flex gap-2 flex-wrap';
-
-                            // Add download button
-                            const downloadBtn = document.createElement('a');
-                            downloadBtn.href = status.download_url;
-                            downloadBtn.download = status.filename ? status.filename.split('/').pop() : 'youtube_download';
-                            downloadBtn.className = 'btn btn-primary';
-                            downloadBtn.innerHTML = '<i class="bi bi-download me-2"></i>Download File';
-                            buttonContainer.appendChild(downloadBtn);
-
-                            // Add direct link button
-                            const directBtn = document.createElement('a');
-                            directBtn.href = status.download_url;
-                            directBtn.className = 'btn btn-secondary';
-                            directBtn.innerHTML = '<i class="bi bi-link-45deg me-2"></i>Direct Link';
-                            directBtn.target = '_blank';
-                            buttonContainer.appendChild(directBtn);
-
-                            downloadCompleteAlert.appendChild(buttonContainer);
+                            downloadCompleteAlert.style.display = 'block';
                         }
 
                         if (status.status === 'error') {
