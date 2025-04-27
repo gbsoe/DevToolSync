@@ -109,7 +109,7 @@ def download_video():
     logger.info(f"Received download request - URL: {url}, Format: {format_id}, Type: {download_type}")
     
     if not url:
-        if request.is_xhr or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({'error': 'Please enter a valid YouTube URL'}), 400
         else:
             flash('Please enter a valid YouTube URL', 'danger')
@@ -150,7 +150,6 @@ def download_video():
         
         # Check if this is an AJAX request based on multiple criteria
         is_ajax = (
-            request.is_xhr or 
             request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
             request.headers.get('Accept', '').startswith('application/json')
         )
@@ -170,7 +169,7 @@ def download_video():
     except Exception as e:
         logger.error(f"Error generating download link: {str(e)}")
         
-        if request.is_xhr or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({'error': str(e)}), 500
         else:
             flash(f"Error: {str(e)}", 'danger')
