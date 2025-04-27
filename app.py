@@ -58,26 +58,73 @@ def direct_download():
     video_id = request.args.get('v', '')
     format_id = request.args.get('format', '18')  # Default to medium quality
     download_type = request.args.get('type', 'video')  # Default to video
+    timestamp = request.args.get('_t', '')  # Timestamp to avoid caching
     
     if not video_id:
+        flash("No video ID provided", 'danger')
         return redirect('/')
     
     try:
         # Create a YouTube URL from the video ID
         url = f"https://www.youtube.com/watch?v={video_id}"
         
+        # Log download attempt for debugging
+        logger.info(f"Attempting direct download for video: {video_id}, format: {format_id}, type: {download_type}")
+        
         # Initialize the YouTube downloader
         downloader = YoutubeDownloader()
         
-        # Get the direct download URL
-        direct_url = downloader.get_direct_url(url, format_id, download_type)
-        
-        # Get video info to help set the filename
-        video_info = get_yt_info(url)
-        title = video_info.get('title', f'youtube_{video_id}')
+        # Get video info to help set the filename before attempting to get direct URL
+        # This ensures we have a good title even if the format is changed
+        try:
+            video_info = get_yt_info(url)
+            title = video_info.get('title', f'youtube_{video_id}')
+        except Exception as info_error:
+            logger.warning(f"Error getting video info: {str(info_error)}")
+            title = f'youtube_{video_id}'
         
         # Clean up the title for use as a filename
         safe_title = secure_filename(title).replace(' ', '_')
+        
+        # Try to get the direct download URL with retries for different formats
+        direct_url = None
+        error_message = None
+        
+        try:
+            # First try with the requested format
+            direct_url = downloader.get_direct_url(url, format_id, download_type)
+            logger.info(f"Got direct URL with requested format: {format_id}")
+        except Exception as format_error:
+            logger.warning(f"Error getting direct URL with format {format_id}: {str(format_error)}")
+            error_message = str(format_error)
+            
+            # Try with fallback formats
+            try:
+                if download_type == 'video':
+                    # For video, try common fallback formats
+                    fallback_formats = ['18', '22', '135', '136', 'best']
+                else:
+                    # For audio, try common fallback formats
+                    fallback_formats = ['140', '251', '250', 'bestaudio']
+                
+                for fallback_format in fallback_formats:
+                    if fallback_format != format_id:  # Skip the one we already tried
+                        try:
+                            logger.info(f"Trying fallback format: {fallback_format}")
+                            direct_url = downloader.get_direct_url(url, fallback_format, download_type)
+                            if direct_url:
+                                logger.info(f"Got direct URL with fallback format: {fallback_format}")
+                                break
+                        except Exception as fallback_error:
+                            logger.warning(f"Error with fallback format {fallback_format}: {str(fallback_error)}")
+            except Exception as fallbacks_error:
+                logger.error(f"Error trying fallback formats: {str(fallbacks_error)}")
+        
+        # If we couldn't get a direct URL, show an error
+        if not direct_url:
+            logger.error(f"Failed to get direct URL for video {video_id}: {error_message}")
+            flash(f"Error: The requested format is not available. {error_message}", 'danger')
+            return redirect(f'/watch?v={video_id}')
         
         # Set the appropriate extension
         extension = 'mp4' if download_type == 'video' else 'mp3'
@@ -88,13 +135,20 @@ def direct_download():
             'Content-Disposition': f'attachment; filename="{safe_title}.{extension}"'
         }
         
+        # Log the success
+        logger.info(f"Successfully generated direct download URL for {video_id}")
+        
         # Redirect to the direct URL with the proper headers
         return redirect(direct_url)
         
     except Exception as e:
         logger.error(f"Error generating direct download: {str(e)}")
-        flash(f"Error: {str(e)}", 'danger')
-        return redirect('/')
+        flash(f"Error: Unable to download video. {str(e)}", 'danger')
+        # Redirect to the watch page if we have the video ID, otherwise to home
+        if video_id:
+            return redirect(f'/watch?v={video_id}')
+        else:
+            return redirect('/')
 
 @app.route('/faq')
 def faq():

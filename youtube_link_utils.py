@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import time
 import urllib.parse
 import json
 import requests
@@ -195,13 +196,16 @@ def generate_clipto_url(youtube_url, format_id, download_type='video'):
     if not video_id:
         raise ValueError("Invalid YouTube URL")
     
-    # Instead of redirecting to YouTube, now we'll use our own endpoint
+    # Instead of redirecting to YouTube, use our own endpoint
     base_url = "/direct-download"
+    
+    # Generate random timestamp to avoid caching issues
+    timestamp = int(time.time())
     
     # Build the URL to our internal endpoint
     if download_type == 'audio':
         # For audio downloads
-        return f"{base_url}?v={video_id}&format={format_id}&type=audio"
+        return f"{base_url}?v={video_id}&format={format_id}&type=audio&_t={timestamp}"
     else:
         # For video downloads
-        return f"{base_url}?v={video_id}&format={format_id}&type=video"
+        return f"{base_url}?v={video_id}&format={format_id}&type=video&_t={timestamp}"

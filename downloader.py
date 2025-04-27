@@ -253,39 +253,85 @@ class YoutubeDownloader:
             ensure_fresh_cookies()
             
             # Set the appropriate format based on the download type
-            format_spec = format_id
             if download_type == 'audio':
                 # For audio, use the specific audio format or fallback to bestaudio
                 format_spec = f"{format_id}/bestaudio/best"
+            else:
+                # For video, add fallbacks to the format specification
+                # This allows yt-dlp to automatically select the next best format if the requested one isn't available
+                format_spec = f"{format_id}/best[height<=720]/best"
             
             # Enhanced options with better browser simulation
             options = {
                 'format': format_spec,
-                'quiet': True,
+                'quiet': False,  # Enable output for debugging
                 'skip_download': True,
                 'cookiefile': 'cookies.txt',
                 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'referer': 'https://www.youtube.com/',
-                'ignoreerrors': True
+                'ignoreerrors': False,  # Don't ignore errors to get better error messages
+                'verbose': True  # Enable verbose output
             }
             
             # Try to get info with enhanced options and cookies
             with yt_dlp.YoutubeDL(options) as ydl:
-                info = ydl.extract_info(url, download=False)
-                if not info:
-                    raise Exception("Could not retrieve video information")
-                
-                # Get the URL for the selected format
-                if 'url' in info:
-                    return info['url']
-                elif 'formats' in info:
-                    for fmt in info['formats']:
-                        if fmt.get('format_id') == format_id:
-                            return fmt.get('url')
+                try:
+                    info = ydl.extract_info(url, download=False)
+                    if not info:
+                        raise Exception("Could not retrieve video information")
                     
-                    # If format not found, get the best available format
-                    if info['formats'] and 'url' in info['formats'][0]:
-                        return info['formats'][0]['url']
+                    # Get the URL for the selected format
+                    if 'url' in info:
+                        logger.info(f"Found direct URL in info: {url[:30]}...")
+                        return info['url']
+                    elif 'formats' in info:
+                        # Log available formats for debugging
+                        logger.info(f"Available formats: {[f.get('format_id') for f in info['formats']]}")
+                        
+                        # First try to find the exact format
+                        for fmt in info['formats']:
+                            if fmt.get('format_id') == format_id and 'url' in fmt:
+                                logger.info(f"Found exact format match for {format_id}")
+                                return fmt.get('url')
+                        
+                        # If we couldn't find the exact format, find the best alternative
+                        # For video: find the closest resolution
+                        if download_type == 'video':
+                            # Sort formats by resolution (height)
+                            video_formats = [f for f in info['formats'] if f.get('vcodec', 'none') != 'none' and 'url' in f]
+                            if video_formats:
+                                # Sort by height (resolution)
+                                best_video = sorted(video_formats, key=lambda x: x.get('height', 0), reverse=True)[0]
+                                logger.info(f"Using best alternative video format: {best_video.get('format_id')} ({best_video.get('height')}p)")
+                                return best_video.get('url')
+                        
+                        # For audio: find the best audio quality
+                        else:
+                            audio_formats = [f for f in info['formats'] if f.get('acodec', 'none') != 'none' and 'url' in f]
+                            if audio_formats:
+                                # Sort by audio bitrate
+                                best_audio = sorted(audio_formats, key=lambda x: x.get('abr', 0), reverse=True)[0]
+                                logger.info(f"Using best alternative audio format: {best_audio.get('format_id')} ({best_audio.get('abr')}kbps)")
+                                return best_audio.get('url')
+                        
+                        # If we still couldn't find anything, use the first format with a URL
+                        for fmt in info['formats']:
+                            if 'url' in fmt:
+                                logger.info(f"Using fallback format: {fmt.get('format_id')}")
+                                return fmt.get('url')
+                
+                except Exception as inner_error:
+                    logger.error(f"Error during yt-dlp extraction: {str(inner_error)}")
+                    # Try with a more permissive format string as a last resort
+                    logger.info("Trying with a more permissive format string")
+                    options['format'] = 'best' if download_type == 'video' else 'bestaudio'
+                    try:
+                        info = ydl.extract_info(url, download=False)
+                        if info and 'url' in info:
+                            return info['url']
+                    except:
+                        pass
+                    raise inner_error
             
             raise Exception("Could not find a direct download URL")
             
