@@ -2,9 +2,11 @@ import os
 import logging
 import datetime
 import time
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory, send_file, make_response
+import requests
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory, send_file, make_response, Response
 from werkzeug.utils import secure_filename
 import urllib.parse
+from sqlalchemy import func
 
 # Import our modules
 from youtube_link_utils import get_video_info as get_yt_info, generate_clipto_url, get_video_id
@@ -517,6 +519,89 @@ def robots():
 def sitemap():
     """Serve sitemap.xml file"""
     return send_from_directory('static', 'sitemap.xml')
+    
+@app.route('/process-download')
+def process_download():
+    """Server-side handler for downloading YouTube videos"""
+    url = request.args.get('url', '')
+    filename = request.args.get('filename', 'youtube_video.mp4')
+    
+    if not url:
+        flash("No URL provided for download", 'danger')
+        return redirect('/')
+        
+    try:
+        logger.info(f"Processing direct download for URL: {url[:50]}...")
+        
+        # If it's a YouTube direct URL, we need to fetch it through our downloader
+        if 'youtube.com' in url or 'youtu.be' in url:
+            # Initialize the YouTube downloader
+            downloader = YoutubeDownloader()
+            
+            # Try to extract video ID and format from the URL
+            video_id = get_video_id(url)
+            if not video_id:
+                # If we can't extract from URL, assume it's a direct streaming URL
+                logger.info("URL appears to be a direct streaming URL, passing through")
+            else:
+                logger.info(f"Extracted video ID: {video_id}, attempting to get direct URL")
+                # Determine if it's audio or video based on filename
+                download_type = 'audio' if filename.lower().endswith(('.mp3', '.m4a', '.opus', '.ogg')) else 'video'
+                
+                # Try to pass through our downloader to get the real streaming URL
+                url = downloader.get_direct_url(url, 'best', download_type)
+        
+        # Create a proxy request to the target URL
+        logger.info(f"Fetching content from: {url[:50]}...")
+        
+        # Make a streaming request to the source
+        response = requests.get(
+            url, 
+            stream=True, 
+            headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Referer': 'https://www.youtube.com/'
+            }
+        )
+        
+        # Get content type from response or guess from filename
+        content_type = response.headers.get('Content-Type')
+        if not content_type or 'text/html' in content_type:
+            # Try to guess content type from filename
+            if filename.lower().endswith('.mp4'):
+                content_type = 'video/mp4'
+            elif filename.lower().endswith('.mp3'):
+                content_type = 'audio/mpeg'
+            elif filename.lower().endswith('.m4a'):
+                content_type = 'audio/mp4'
+            elif filename.lower().endswith('.webm'):
+                content_type = 'video/webm'
+            else:
+                content_type = 'application/octet-stream'
+        
+        # Create a flask response with streaming content
+        flask_response = Response(
+            response.iter_content(chunk_size=4096),
+            content_type=content_type
+        )
+        
+        # Add content-disposition header to force download with the specified filename
+        flask_response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Pass through content length if available
+        if 'Content-Length' in response.headers:
+            flask_response.headers['Content-Length'] = response.headers['Content-Length']
+        
+        # Record download statistics
+        Statistics.record_download('video' if content_type.startswith('video') else 'audio')
+        
+        logger.info(f"Sending file: {filename} with content type: {content_type}")
+        return flask_response
+        
+    except Exception as e:
+        logger.error(f"Error processing download: {str(e)}")
+        flash(f"Error: {str(e)}", 'danger')
+        return redirect('/')
 
 @app.route('/google07df394c40c0da6f.html')
 def google_verification():

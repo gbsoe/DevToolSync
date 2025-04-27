@@ -32,8 +32,18 @@
                                 
                                 <!-- Direct Download Button -->
                                 <div class="mb-4">
-                                    <a href="{{ direct_url }}" download="{{ filename }}" class="btn btn-success btn-lg d-block">
+                                    <a href="{{ direct_url }}" download="{{ filename }}" class="btn btn-success btn-lg d-block btn-download-primary" id="download-button">
                                         <i class="bi bi-download me-2"></i>Download Now
+                                    </a>
+                                    <div class="text-center mt-2">
+                                        <small class="text-muted">If download doesn't start automatically, click the button above</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Alternative download method -->
+                                <div class="text-center mb-4">
+                                    <a href="/process-download?url={{ direct_url|urlencode }}&filename={{ filename|urlencode }}" class="btn btn-outline-primary">
+                                        <i class="bi bi-arrow-down-circle me-2"></i>Alternative Download Method
                                     </a>
                                 </div>
                                 
@@ -81,22 +91,65 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/download-helper.js') }}"></script>
 <script>
+    // Check browser support for the advanced download functionality
+    const hasAdvancedDownloadSupport = checkBrowserSupport();
+    
     // Automatically trigger download after page loads
     window.addEventListener('load', function() {
         setTimeout(function() {
-            const downloadLink = document.querySelector('a[download]');
-            if (downloadLink) {
-                // Click the download link to start download automatically
-                downloadLink.click();
-                
-                // Update status message
+            try {
+                // Get the download URL and filename
+                const downloadLink = document.querySelector('a[download]');
+                if (downloadLink) {
+                    const url = downloadLink.getAttribute('href');
+                    const filename = downloadLink.getAttribute('download');
+                    
+                    console.log("Starting download with:", url, filename);
+                    
+                    if (hasAdvancedDownloadSupport) {
+                        // Use our enhanced download helper to handle the download
+                        fetchAndDownloadFile(url, filename, (progress) => {
+                            console.log(`Download progress: ${progress}%`);
+                        }).then(success => {
+                            if (success) {
+                                console.log("Download completed successfully");
+                            } else {
+                                console.warn("Download failed, falling back to direct link");
+                                // Fallback: click the download link directly
+                                downloadLink.click();
+                            }
+                        });
+                    } else {
+                        // Fallback for browsers without advanced support
+                        console.log("Using fallback download method");
+                        
+                        // For browsers without the required features, use server-side processing
+                        const serverUrl = `/process-download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+                        window.location.href = serverUrl;
+                    }
+                    
+                    // Update status message
+                    const statusDiv = document.querySelector('.download-status');
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Your download has started. If it doesn't appear, click the download button above.
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error("Error initiating download:", error);
+                // Show error message
                 const statusDiv = document.querySelector('.download-status');
                 if (statusDiv) {
                     statusDiv.innerHTML = `
-                        <div class="alert alert-success">
-                            <i class="bi bi-check-circle me-2"></i>
-                            Your download has started. If it doesn't appear, click the download button above.
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            Error starting download: ${error.message}. Please click the download button above.
                         </div>
                     `;
                 }

@@ -9,11 +9,34 @@ async function fetchAndDownloadFile(url, filename, onProgress) {
         // Show progress notification
         showProgressToast('Starting download...');
         
+        // Extract information from the URL
+        console.log("Fetching from URL:", url);
+        
         // First, fetch the file headers to get content information
-        const headResponse = await fetch(url, { method: 'HEAD' });
+        const headResponse = await fetch(url, { 
+            method: 'HEAD',
+            mode: 'cors',
+            credentials: 'omit',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
         
         if (!headResponse.ok) {
-            throw new Error(`HTTP error! Status: ${headResponse.status}`);
+            console.error(`HTTP error in HEAD request! Status: ${headResponse.status}`);
+            showProgressToast('Trying alternative download method...');
+            
+            // If HEAD request fails, try direct file download without streaming
+            forceDownloadUsingIframe(url, filename);
+            return true;
+        }
+        
+        // Get content-type to verify if it's a media file
+        const contentType = headResponse.headers.get('content-type') || '';
+        if (contentType.includes('text/html')) {
+            console.warn("Content appears to be HTML, not media. Using alternative method.");
+            forceDownloadUsingIframe(url, filename);
+            return true;
         }
         
         // Get content-length if available
@@ -21,10 +44,29 @@ async function fetchAndDownloadFile(url, filename, onProgress) {
         const totalSize = contentLength ? parseInt(contentLength, 10) : 0;
         
         // Now fetch the actual content
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            mode: 'cors',
+            credentials: 'omit',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            console.error(`HTTP error in main request! Status: ${response.status}`);
+            showProgressToast('Trying alternative download method...');
+            
+            // If request fails, try direct file download
+            forceDownloadUsingIframe(url, filename);
+            return true;
+        }
+        
+        // Check content type again on the actual response
+        const actualContentType = response.headers.get('content-type') || '';
+        if (actualContentType.includes('text/html')) {
+            console.warn("Response content is HTML, not media. Using alternative method.");
+            forceDownloadUsingIframe(url, filename);
+            return true;
         }
         
         // Get the response as a stream
@@ -89,8 +131,36 @@ async function fetchAndDownloadFile(url, filename, onProgress) {
     } catch (error) {
         console.error('Download failed:', error);
         showErrorToast(`Download failed: ${error.message}`);
-        return false;
+        
+        // Try the fallback method if streaming fails
+        try {
+            forceDownloadUsingIframe(url, filename);
+            return true;
+        } catch (fallbackError) {
+            console.error('Fallback download failed:', fallbackError);
+            return false;
+        }
     }
+}
+
+// Alternative download method using a hidden iframe
+function forceDownloadUsingIframe(url, filename) {
+    showProgressToast('Using alternative download method...');
+    
+    // Create a server-side request to handle the download
+    const downloadUrl = `/process-download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+    
+    // Create a hidden iframe to trigger download
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = downloadUrl;
+    document.body.appendChild(iframe);
+    
+    // Clean up after a delay
+    setTimeout(() => {
+        document.body.removeChild(iframe);
+        showSuccessToast('Download initiated! Check your downloads folder.');
+    }, 2000);
 }
 
 // Helper function to show progress toast
