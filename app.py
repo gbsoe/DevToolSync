@@ -85,7 +85,7 @@ def direct_url_process():
     
 @app.route('/direct-download')
 def direct_download():
-    """Directly download a YouTube video or audio file"""
+    """Show download page with direct download button"""
     video_id = request.args.get('v', '')
     format_id = request.args.get('format', '18')  # Default to medium quality
     download_type = request.args.get('type', 'video')  # Default to video
@@ -170,17 +170,58 @@ def direct_download():
                 'type': download_type
             })
         
-        # Otherwise, create appropriate headers for direct download
-        # These headers will tell the browser this is a file download
-        response = make_response(redirect(direct_url))
-        response.headers['Content-Type'] = 'application/octet-stream'
-        response.headers['Content-Disposition'] = f'attachment; filename="{safe_title}.{extension}"'
+        # Get the correct format label
+        format_label = ''
+        if download_type == 'video':
+            if format_id == '22':
+                format_label = '720p HD Video (MP4)'
+            elif format_id == '18':
+                format_label = '360p Video (MP4)'
+            else:
+                format_label = 'Video'
+        else:
+            if format_id == '140':
+                format_label = 'Audio (128kbps M4A)'
+            elif format_id == '251':
+                format_label = 'Audio (160kbps OPUS)'
+            else:
+                format_label = 'Audio'
         
-        # Log the success
-        logger.info(f"Successfully generated direct download URL for {video_id}")
+        # Record download statistics
+        Statistics.record_download(download_type)
         
-        # Return the response with proper headers to force download
-        return response
+        # Create download record with anonymized IP
+        ip_address = request.remote_addr
+        if ip_address:
+            # Anonymize IP by removing last octet
+            ip_parts = ip_address.split('.')
+            if len(ip_parts) == 4:  # IPv4
+                ip_address = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0"
+            else:
+                ip_address = "0.0.0.0"  # Fallback
+        
+        # Add download record
+        Download.add_download(
+            url=url,
+            video_title=title,
+            format_type=download_type,
+            quality=format_id,
+            status="completed",
+            ip_address=ip_address
+        )
+        
+        # Get video thumbnail
+        thumbnail_url = f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+        
+        # Render the direct download page with the direct URL
+        return render_template('direct_download.html',
+                              title=title,
+                              thumbnail=thumbnail_url,
+                              direct_url=direct_url,
+                              filename=f"{safe_title}.{extension}",
+                              format=format_label,
+                              download_type=download_type,
+                              video_id=video_id)
         
     except Exception as e:
         logger.error(f"Error generating direct download: {str(e)}")

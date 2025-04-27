@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Download {{ title }} - YouTube Downloader{% endblock %}
+
+{% block meta_description %}Download {{ title }} in {{ format }} format from YouTube. Free, fast, and easy to use YouTube downloader.{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="download-page">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="h5 mb-0">Your Download is Ready</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <img src="{{ thumbnail }}" alt="{{ title }}" class="img-fluid rounded shadow">
+                            </div>
+                            <div class="col-md-8">
+                                <h4 class="mb-3">{{ title }}</h4>
+                                <div class="badge bg-secondary mb-3">
+                                    {% if download_type == 'video' %}
+                                    <i class="bi bi-camera-video me-1"></i>
+                                    {% else %}
+                                    <i class="bi bi-music-note me-1"></i>
+                                    {% endif %}
+                                    {{ format }}
+                                </div>
+                                <p class="text-muted mb-4">Your file is ready to be downloaded. Click the button below to start the download.</p>
+                                
+                                <!-- Direct Download Button -->
+                                <div class="mb-4">
+                                    <a href="{{ direct_url }}" download="{{ filename }}" class="btn btn-success btn-lg d-block">
+                                        <i class="bi bi-download me-2"></i>Download Now
+                                    </a>
+                                </div>
+                                
+                                <!-- Notes -->
+                                <div class="alert alert-info small">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <span>If the download doesn't start automatically, click the button above.</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Information -->
+                        <div class="mt-4">
+                            <div class="card">
+                                <div class="card-body bg-light">
+                                    <h5 class="mb-3">Need Help?</h5>
+                                    <p>If your download doesn't start automatically:</p>
+                                    <ol class="mb-0">
+                                        <li>Click the Download button above</li>
+                                        <li>When prompted, select "Save File" option</li>
+                                        <li>Choose a location on your device to save the file</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Auto-Download JS -->
+                        <div class="text-center mt-4 download-status">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <span>Starting your download automatically...</span>
+                        </div>
+                        
+                        <!-- Back button -->
+                        <div class="mt-4 text-center">
+                            <a href="/" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Automatically trigger download after page loads
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            const downloadLink = document.querySelector('a[download]');
+            if (downloadLink) {
+                // Click the download link to start download automatically
+                downloadLink.click();
+                
+                // Update status message
+                const statusDiv = document.querySelector('.download-status');
+                if (statusDiv) {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Your download has started. If it doesn't appear, click the download button above.
+                        </div>
+                    `;
+                }
+            }
+        }, 1500); // Delay of 1.5 seconds to ensure page is fully loaded
+    });
+</script>
+{% endblock %}
