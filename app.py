@@ -409,8 +409,21 @@ def watch_video():
     url = f"https://www.youtube.com/watch?v={video_id}"
     
     try:
-        # Get video information
-        video_info = get_yt_info(url)
+        # Get video information with retry for rate limiting
+        try:
+            video_info = get_yt_info(url)
+        except Exception as info_error:
+            error_msg = str(info_error).lower()
+            # Check if the error is related to rate limiting
+            if "rate" in error_msg and ("exceeded" in error_msg or "limit" in error_msg):
+                logger.warning("Rate limit detected, waiting before retry...")
+                # Wait for a moment (give YouTube API a chance to reset)
+                time.sleep(2)
+                # Try again one more time
+                video_info = get_yt_info(url)
+            else:
+                # Re-raise the original error if it's not a rate limit issue
+                raise
         
         # Generate direct download URLs for all formats
         video_formats = []
@@ -468,8 +481,15 @@ def watch_video():
                               audio_formats=audio_formats)
                               
     except Exception as e:
-        logger.error(f"Error preparing download page: {str(e)}")
-        flash(f"Error: {str(e)}", 'danger')
+        error_msg = str(e).lower()
+        logger.error(f"Error preparing download page: {error_msg}")
+        
+        # Provide a more user-friendly message for rate limiting
+        if "rate" in error_msg and ("exceeded" in error_msg or "limit" in error_msg):
+            flash("YouTube rate limit exceeded. Please wait a moment and try again.", 'warning')
+        else:
+            flash(f"Error: {str(e)}", 'danger')
+            
         return redirect('/')
         
 def format_readable_size(size_bytes):
