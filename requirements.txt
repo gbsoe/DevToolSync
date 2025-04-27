@@ -16,3 +16,5 @@ trafilatura
 pytube
 trafilatura
 trafilatura
+trafilatura
+pytube

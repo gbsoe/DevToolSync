@@ -733,47 +733,137 @@ def download_file():
         logger.info(f"Running in {'production' if is_production else 'development'} environment")
         
         if is_production:
-            # In production, we need to proxy the content rather than redirecting
-            # This prevents the browser from receiving HTML instead of the file
+            # In production, we need a more robust approach that's less likely to be flagged as a bot
             try:
-                logger.info(f"Production mode: Proxying content from {direct_url[:50]}...")
+                logger.info(f"Production mode: Using pytube for direct downloading...")
                 
-                # Stream the remote content through our server
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Referer': 'https://www.youtube.com/'
-                }
+                # Use pytube as an alternative method
+                from pytube import YouTube
                 
-                remote_response = requests.get(direct_url, headers=headers, stream=True)
+                # Create a YouTube object with the URL
+                yt = YouTube(url)
                 
-                if remote_response.status_code != 200:
-                    logger.error(f"Error from YouTube API: Status {remote_response.status_code}")
-                    flash("Error retrieving video content from YouTube. Please try again.", "danger")
+                # Decide which stream to use based on download type and format
+                stream = None
+                
+                if download_type == 'audio':
+                    # Get audio stream
+                    logger.info("Getting audio stream...")
+                    if format_id == 'bestaudio' or format_id == 'best':
+                        stream = yt.streams.get_audio_only()
+                    else:
+                        # Try to get the specific format
+                        stream = yt.streams.filter(only_audio=True).get_by_itag(format_id)
+                        if not stream:
+                            # Fallback to best audio
+                            stream = yt.streams.get_audio_only()
+                else:
+                    # Get video stream
+                    logger.info("Getting video stream...")
+                    if format_id == 'best':
+                        stream = yt.streams.get_highest_resolution()
+                    else:
+                        # Try to get the specific format
+                        stream = yt.streams.get_by_itag(format_id)
+                        if not stream:
+                            # Try progressive streams first (have both audio and video)
+                            stream = yt.streams.filter(progressive=True).order_by('resolution').desc().first()
+                            if not stream:
+                                # Last resort - highest resolution stream
+                                stream = yt.streams.get_highest_resolution()
+                
+                if not stream:
+                    logger.error("No suitable stream found!")
+                    flash("Error: Could not find a suitable video/audio stream.", "danger")
                     return redirect(f'/watch?v={video_id}')
                 
-                # Create a streaming response
+                logger.info(f"Found stream: {stream}")
+                
+                # Stream the file to the client
                 def generate():
-                    for chunk in remote_response.iter_content(chunk_size=4096):
+                    # Stream to BytesIO
+                    from io import BytesIO
+                    buffer = BytesIO()
+                    stream.stream_to_buffer(buffer)
+                    buffer.seek(0)
+                    while True:
+                        chunk = buffer.read(4096)
+                        if not chunk:
+                            break
                         yield chunk
                 
-                # Return a streaming response
-                response = Response(generate(), remote_response.status_code)
+                # Get the correct file extension
+                file_extension = stream.subtype or 'mp4' if download_type == 'video' else 'mp3'
+                filename = f"{safe_title}.{file_extension}"
                 
-                # Copy relevant headers
-                for header in ['Content-Type', 'Content-Length']:
-                    if header in remote_response.headers:
-                        response.headers[header] = remote_response.headers[header]
+                # Set the content type based on the file extension
+                if file_extension == 'mp4':
+                    content_type = 'video/mp4'
+                elif file_extension == 'webm':
+                    content_type = 'video/webm'
+                elif file_extension == 'mp3':
+                    content_type = 'audio/mpeg'
+                elif file_extension == 'm4a':
+                    content_type = 'audio/mp4'
+                else:
+                    content_type = 'application/octet-stream'
                 
-                # Set download headers
-                response.headers['Content-Type'] = mime_type
+                # Create a streaming response
+                response = Response(generate(), 200)
+                
+                # Set appropriate headers
+                response.headers['Content-Type'] = content_type
                 response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
                 
                 return response
                 
-            except Exception as proxy_error:
-                logger.error(f"Error proxying content: {str(proxy_error)}")
-                flash(f"Error: {str(proxy_error)}", "danger")
-                return redirect(f'/watch?v={video_id}')
+            except Exception as pytube_error:
+                logger.error(f"Error with pytube: {str(pytube_error)}")
+                
+                # Try with our original proxy method as a fallback
+                try:
+                    logger.info(f"Falling back to direct proxy method: {direct_url[:50]}...")
+                    
+                    # Stream the remote content through our server
+                    headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        'Referer': 'https://www.youtube.com/',
+                        'Accept': '*/*',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Connection': 'keep-alive',
+                        'Range': 'bytes=0-'
+                    }
+                    
+                    remote_response = requests.get(direct_url, headers=headers, stream=True)
+                    
+                    if remote_response.status_code != 200 and remote_response.status_code != 206:
+                        logger.error(f"Error from YouTube API: Status {remote_response.status_code}")
+                        flash("Error retrieving video content from YouTube. Please try again.", "danger")
+                        return redirect(f'/watch?v={video_id}')
+                    
+                    # Create a streaming response
+                    def generate():
+                        for chunk in remote_response.iter_content(chunk_size=4096):
+                            yield chunk
+                    
+                    # Return a streaming response
+                    response = Response(generate(), remote_response.status_code)
+                    
+                    # Copy relevant headers
+                    for header in ['Content-Type', 'Content-Length']:
+                        if header in remote_response.headers:
+                            response.headers[header] = remote_response.headers[header]
+                    
+                    # Set download headers
+                    response.headers['Content-Type'] = mime_type
+                    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+                    
+                    return response
+                
+                except Exception as proxy_error:
+                    logger.error(f"Error with fallback proxy: {str(proxy_error)}")
+                    flash(f"Error: {str(pytube_error)}. Fallback also failed: {str(proxy_error)}", "danger")
+                    return redirect(f'/watch?v={video_id}')
         else:
             # In development, redirect to the direct URL (works fine locally)
             logger.info(f"Development mode: Redirecting to direct URL: {direct_url[:50]}...")
