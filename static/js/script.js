@@ -26,7 +26,19 @@ function updateProgress(downloadId) {
                 } else if (data.status === 'complete') {
                     progressContainer.style.display = 'none';
                     downloadComplete.style.display = 'block';
-                    document.getElementById('download-link').href = data.download_url;
+                    
+                    // Set both download links
+                    const downloadLink = document.getElementById('download-link');
+                    const directLink = document.getElementById('direct-link');
+                    
+                    if (downloadLink) {
+                        downloadLink.href = data.download_url;
+                    }
+                    
+                    if (directLink) {
+                        directLink.href = data.download_url;
+                    }
+                    
                     return;
                 }
 
@@ -547,35 +559,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         updateDownloadButton();
 
                         if (status.status === 'complete' && status.download_url) {
-                            // Show download complete message with links
-                            downloadCompleteAlert.style.display = 'block';
-
-                            // Set up main download link
-                            downloadLink.href = status.download_url;
-                            downloadLink.download = status.filename ? status.filename.split('/').pop() : 'youtube_download';
-                            downloadLink.style.display = 'inline-block';
-                            downloadLink.classList.add('btn', 'btn-primary', 'mt-2', 'me-2');
-                            downloadLink.innerHTML = '<i class="bi bi-download me-2"></i>Download File';
-
                             // Update download button state
                             downloadButton.disabled = true;
                             downloadButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Download Complete';
-
-                            // Update download complete alert content
-                            downloadCompleteAlert.innerHTML = `
-                                <div class="mb-3">
-                                    <h5><i class="bi bi-check-circle me-2"></i>Download Complete!</h5>
-                                    <p>Your file is ready to download.</p>
-                                </div>
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <a href="${status.download_url}" download class="btn btn-primary">
-                                        <i class="bi bi-download me-2"></i>Download File
-                                    </a>
-                                    <a href="${status.download_url}" target="_blank" class="btn btn-secondary">
-                                        <i class="bi bi-link-45deg me-2"></i>Direct Link
-                                    </a>
-                                </div>
-                            `;
+                            
+                            // Get the download link and direct link elements
+                            const downloadLinkElem = document.getElementById('download-link');
+                            const directLinkElem = document.getElementById('direct-link');
+                            
+                            // Set the download link URLs
+                            if (downloadLinkElem) {
+                                downloadLinkElem.href = status.download_url;
+                                const filename = status.filename ? status.filename.split('/').pop() : 'youtube_download';
+                                downloadLinkElem.setAttribute('download', filename);
+                            }
+                            
+                            // Set the direct link URL
+                            if (directLinkElem) {
+                                directLinkElem.href = status.download_url;
+                            }
+                            
+                            // Show the download complete message
                             downloadCompleteAlert.style.display = 'block';
                         }
 
