@@ -386,8 +386,19 @@ def download_video():
 def watch_video():
     """Display video download page similar to the screenshot"""
     video_id = request.args.get('v', '')
+    url = request.args.get('url', '')
     format_id = request.args.get('format', '18')  # Default to medium quality
     download_type = request.args.get('type', 'video')  # Default to video
+    
+    # If we got a direct URL instead of video ID, extract the video ID
+    if url and not video_id:
+        try:
+            video_id = get_video_id(url)
+            logger.info(f"Extracted video ID from URL: {video_id}")
+        except Exception as e:
+            logger.error(f"Failed to extract video ID from URL: {str(e)}")
+            flash("Invalid YouTube URL. Please check and try again.", "danger")
+            return redirect('/')
     
     if not video_id:
         return redirect('/')
