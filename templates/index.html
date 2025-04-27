@@ -501,12 +501,14 @@
         document.getElementById('error-container').style.display = 'none';
         
         // Fetch video info using AJAX
-        const formData = new FormData();
-        formData.append('url', youtubeUrl);
+        console.log('Fetching info for URL:', youtubeUrl);
         
         fetch('/video_info', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'url=' + encodeURIComponent(youtubeUrl)
         })
         .then(response => {
             if (!response.ok) {
@@ -602,9 +604,23 @@
             document.getElementById('video-info-container').style.display = 'block';
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error fetching video info:', error);
             document.getElementById('video-loader').style.display = 'none';
-            displayError('Failed to fetch video information. Please try again or check the URL.');
+            displayError('Failed to fetch video information: ' + error.message + '. Please try again or check the URL.');
+            
+            // Add debug info on the page
+            const errorContainer = document.getElementById('error-container');
+            if (errorContainer) {
+                const debugInfo = document.createElement('div');
+                debugInfo.className = 'mt-3 p-3 bg-light small';
+                debugInfo.innerHTML = `
+                    <strong>Debug Info:</strong><br>
+                    URL: ${youtubeUrl}<br>
+                    Video ID: ${getVideoIdFromUrl(youtubeUrl)}<br>
+                    Error: ${error.toString()}
+                `;
+                errorContainer.appendChild(debugInfo);
+            }
         });
     }
     

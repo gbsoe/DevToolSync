@@ -242,7 +242,30 @@ def faq():
 @app.route('/video_info', methods=['POST'])
 def get_video_info():
     """Get information about a YouTube video"""
+    # Log raw request data for debugging
+    logger.info(f"Received video_info request. Form data: {request.form}")
+    logger.info(f"Request content type: {request.content_type}")
+    
+    # Try to get URL from various sources in the request
     url = request.form.get('url', '')
+    
+    if not url:
+        # If not in form data, try to get from JSON data
+        if request.is_json:
+            data = request.get_json()
+            url = data.get('url', '')
+        
+        # If still not found, try to get from raw data
+        if not url and request.data:
+            try:
+                # Try to parse as URL-encoded data
+                from urllib.parse import parse_qs
+                parsed = parse_qs(request.data.decode('utf-8'))
+                url = parsed.get('url', [''])[0]
+            except Exception as parse_error:
+                logger.error(f"Error parsing request data: {str(parse_error)}")
+    
+    logger.info(f"Extracted URL: {url}")
     
     if not url:
         return jsonify({'error': 'Please enter a valid YouTube URL'}), 400
@@ -268,6 +291,9 @@ def get_video_info():
                     {'format_id': '140', 'format': 'Audio (128kbps m4a)', 'ext': 'm4a', 'abr': '128kbps'}
                 ]
             }
+        
+        # Log successful response
+        logger.info(f"Successfully got video info for {url}")
         
         # Add additional headers to ensure content type is correct
         response = jsonify(video_info)
