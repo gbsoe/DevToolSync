@@ -740,126 +740,133 @@ def download_file():
         if is_production:
             # In production, we need a more robust approach that's less likely to be flagged as a bot
             try:
-                logger.info(f"Production mode: Using pytube for direct downloading...")
-                
-                # Use direct yt-dlp redirection which is much faster than streaming
-                # This should not time out since we're getting the direct URL and immediately redirecting
+                logger.info(f"Production mode: Using direct download method...")
                 
                 import yt_dlp
                 import time
                 import random
+                import tempfile
+                import os
                 
-                # Get a suitable format string based on the requested format
-                if download_type == 'audio':
-                    # For audio downloads
-                    if format_id == 'bestaudio' or format_id == 'best':
-                        format_string = 'bestaudio'
+                # Create a temporary directory for the download
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    # Get a suitable format string based on the requested format
+                    if download_type == 'audio':
+                        # For audio downloads
+                        if format_id == 'bestaudio' or format_id == 'best':
+                            format_string = 'bestaudio'
+                        else:
+                            format_string = format_id
+                        # Set output template for audio
+                        output_template = os.path.join(temp_dir, '%(title)s.%(ext)s')
+                        # Set proper extension for audio files
+                        file_extension = 'mp3'
+                        content_type = 'audio/mpeg'
+                        # Add post-processing for audio
+                        postprocessors = [{
+                            'key': 'FFmpegExtractAudio',
+                            'preferredcodec': 'mp3',
+                            'preferredquality': '192',
+                        }]
                     else:
-                        format_string = format_id
-                else:
-                    # For video downloads
-                    if format_id == 'best':
-                        format_string = 'best[height<=720]'
-                    else:
-                        format_string = format_id
-                
-                logger.info(f"Using format string: {format_string}")
-                
-                # Generate a random request ID to avoid caching issues
-                request_id = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=8))
-                
-                # Configure yt-dlp
-                ydl_opts = {
-                    'format': format_string,
-                    'skip_download': True,  # Don't download, just get the URL
-                    'quiet': False,         # Show messages
-                    'cookiefile': 'cookies.txt',
-                    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                    'referer': 'https://www.youtube.com/feed/trending',
-                    'ignoreerrors': False,
-                    'verbose': True,
-                    'nocheckcertificate': True,
-                    'geo_bypass': True,
-                    'extractor_args': {'youtube': {'player_client': ['web']}},
-                    'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Accept': '*/*',
-                        'DNT': '1',  # Do Not Track
-                        'Connection': 'keep-alive',
+                        # For video downloads
+                        if format_id == 'best':
+                            format_string = 'best[height<=720]'
+                        else:
+                            format_string = format_id
+                        # Set output template for video
+                        output_template = os.path.join(temp_dir, '%(title)s.%(ext)s')
+                        # Set proper extension for video files
+                        file_extension = 'mp4'
+                        content_type = 'video/mp4'
+                        # No post-processing needed for video
+                        postprocessors = []
+                    
+                    logger.info(f"Using format string: {format_string}")
+                    
+                    # Generate a random request ID to avoid caching issues
+                    request_id = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=8))
+                    
+                    # Configure yt-dlp for direct download
+                    ydl_opts = {
+                        'format': format_string,
+                        'outtmpl': output_template,
+                        'quiet': False,
+                        'no_warnings': False,
+                        'cookiefile': 'cookies.txt',
+                        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                        'referer': 'https://www.youtube.com/feed/trending',
+                        'ignoreerrors': False,
+                        'verbose': True,
+                        'nocheckcertificate': True,
+                        'geo_bypass': True,
+                        'extractor_args': {'youtube': {'player_client': ['web']}},
+                        'http_headers': {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                            'Accept': '*/*',
+                            'DNT': '1',
+                            'Connection': 'keep-alive',
+                            'Referer': 'https://www.youtube.com/',
+                        },
+                        'postprocessors': postprocessors,
                     }
-                }
-                
-                # Set extensions based on download type
-                file_extension = 'mp4' if download_type == 'video' else 'mp3'
-                content_type = 'video/mp4' if download_type == 'video' else 'audio/mpeg'
-                
-                # Create safe filename
-                filename = f"{safe_title}.{file_extension}"
-                
-                # Extract the direct URL using yt-dlp
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=False)
                     
-                    if not info:
-                        logger.error("Failed to extract video info")
-                        flash("Error: Could not extract video information.", "danger")
-                        return redirect(f'/watch?v={video_id}')
+                    # Create safe filename
+                    safe_filename = f"{safe_title}.{file_extension}"
                     
-                    # Get the best format URL
-                    formats = info.get('formats', [])
-                    if not formats:
-                        logger.error("No formats found in extracted info")
-                        flash("Error: No downloadable formats found for this video.", "danger")
-                        return redirect(f'/watch?v={video_id}')
-                    
-                    # Get the direct URL from the selected format
-                    direct_download_url = None
-                    
-                    # Try to find the exact format first
-                    for fmt in formats:
-                        if fmt.get('format_id') == format_id:
-                            direct_download_url = fmt.get('url')
-                            break
-                    
-                    # If exact format not found, use the best available format
-                    if not direct_download_url and 'url' in info:
-                        direct_download_url = info['url']
-                    
-                    # If still not found, use the first format's URL
-                    if not direct_download_url and formats:
-                        direct_download_url = formats[0].get('url')
-                    
-                    if not direct_download_url:
-                        logger.error("No direct URL found in extracted info")
-                        flash("Error: Could not generate a direct download link.", "danger")
-                        return redirect(f'/watch?v={video_id}')
-                    
-                    logger.info(f"Direct URL extracted successfully: {direct_download_url[:50]}...")
-                
-                # Rather than streaming through our server (which causes timeouts),
-                # we'll redirect directly to the extracted URL with proper headers
-                headers = {
-                    'Range': 'bytes=0-',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                    'Accept': '*/*',
-                    'Accept-Encoding': 'gzip, deflate, br',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Connection': 'keep-alive',
-                    'DNT': '1',
-                    'Upgrade-Insecure-Requests': '1',
-                    'Content-Type': content_type,
-                    'Content-Disposition': f'attachment; filename="{filename}"'
-                }
-                
-                # Create a redirect response - this is much more efficient than streaming
-                response = redirect(direct_download_url, code=302)
-                
-                # Set appropriate headers
-                response.headers['Content-Type'] = content_type
-                response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-                
-                return response
+                    # Download the file using yt-dlp
+                    logger.info(f"Starting direct download to {temp_dir}...")
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        try:
+                            # Download the file
+                            info = ydl.extract_info(url, download=True)
+                            
+                            if not info:
+                                logger.error("Failed to extract video info")
+                                flash("Error: Could not extract video information.", "danger")
+                                return redirect(f'/watch?v={video_id}')
+                            
+                            # Get the downloaded file path
+                            if 'requested_downloads' in info and info['requested_downloads']:
+                                download_path = info['requested_downloads'][0]['filepath']
+                            else:
+                                # Guess the filepath from the info
+                                download_path = ydl.prepare_filename(info)
+                                # Apply post-processing extension changes for audio
+                                if download_type == 'audio':
+                                    base_path, _ = os.path.splitext(download_path)
+                                    download_path = f"{base_path}.mp3"
+                            
+                            logger.info(f"Downloaded file to: {download_path}")
+                            
+                            # Check if file exists
+                            if not os.path.exists(download_path):
+                                logger.error(f"Downloaded file not found at {download_path}")
+                                # Try to find any file in the temp directory
+                                files = os.listdir(temp_dir)
+                                if files:
+                                    download_path = os.path.join(temp_dir, files[0])
+                                    logger.info(f"Found alternative file: {download_path}")
+                                else:
+                                    flash("Error: Download failed, no file was created.", "danger")
+                                    return redirect(f'/watch?v={video_id}')
+                            
+                            # File exists, serve it directly
+                            logger.info(f"Serving file: {download_path}")
+                            
+                            # Serve the file
+                            return send_file(
+                                download_path,
+                                as_attachment=True,
+                                download_name=safe_filename,
+                                mimetype=content_type
+                            )
+                            
+                        except Exception as download_error:
+                            logger.error(f"Error during direct download: {str(download_error)}")
+                            flash(f"Download error: {str(download_error)}", "danger")
+                            return redirect(f'/watch?v={video_id}')
                 
             except Exception as pytube_error:
                 logger.error(f"Error with pytube: {str(pytube_error)}")

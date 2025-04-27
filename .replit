@@ -2,7 +2,7 @@ modules = ["python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["gitFull", "openssl", "playwright-driver", "postgresql"]
+packages = ["gitFull", "openssl", "playwright-driver", "postgresql", "ffmpeg"]
 
 [deployment]
 deploymentTarget = "autoscale"
