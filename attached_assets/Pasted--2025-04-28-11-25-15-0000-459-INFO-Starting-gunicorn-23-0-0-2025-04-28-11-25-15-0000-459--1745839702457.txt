@@ -1,0 +1,61 @@
+[2025-04-28 11:25:15 +0000] [459] [INFO] Starting gunicorn 23.0.0
+[2025-04-28 11:25:15 +0000] [459] [INFO] Listening at: http://0.0.0.0:5000 (459)
+[2025-04-28 11:25:15 +0000] [459] [INFO] Using worker: sync
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winchd: 471
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:16 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:17 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:17 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:17 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:17 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:17 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:17 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:17 +0000] [459] [INFO] Handling signal: winch
+[2025-04-28 11:25:17 +0000] [459] [INFO] Handling signal: winch
+INFO:app:Extracted video ID from URL: UKqkJ3TzVqY
+INFO:youtube_link_utils:Getting video info for: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+INFO:app:Getting direct URL for: https://www.youtube.com/watch?v=UKqkJ3TzVqY with format: 18, type: video
+INFO:downloader:Getting direct URL for: https://www.youtube.com/watch?v=UKqkJ3TzVqY with format: 18
+INFO:cookie_manager:Using existing cookie file
+[debug] Encodings: locale UTF-8, fs utf-8, pref UTF-8, out utf-8, error utf-8, screen utf-8
+[debug] yt-dlp version stable@2025.03.31 from yt-dlp/yt-dlp [5e457af57] (pip) API
+[debug] params: {'format': '18/best[height<=720]/best', 'quiet': False, 'skip_download': True, 'cookiefile': 'cookies.txt', 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36', 'referer': 'https://www.youtube.com/feed/trending', 'ignoreerrors': False, 'verbose': True, 'nocheckcertificate': True, 'geo_bypass': True, 'extractor_args': {'youtube': {'player_client': 'web'}}, 'compat_opts': set(), 'http_headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Language': 'en-us,en;q=0.5', 'Sec-Fetch-Mode': 'navigate'}}
+[debug] Python 3.11.10 (CPython x86_64 64bit) - Linux-6.2.16-x86_64-with-glibc2.40 (OpenSSL 3.3.2 3 Sep 2024, glibc 2.40)
+[debug] exe versions: ffmpeg 6.1.1 (setts), ffprobe 6.1.1
+[debug] Optional libraries: Cryptodome-3.22.0, certifi-2025.01.31, requests-2.32.3, sqlite3-3.46.1, urllib3-2.4.0
+[debug] Proxy map: {}
+[debug] Request Handlers: urllib, requests
+[debug] Plugin directories: none
+[debug] Loaded 1850 extractors
+[youtube] Extracting URL: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+[youtube] UKqkJ3TzVqY: Downloading webpage
+WARNING: [youtube] Skipping unsupported client "w"
+WARNING: [youtube] Skipping unsupported client "e"
+WARNING: [youtube] Skipping unsupported client "b"
+[youtube] UKqkJ3TzVqY: Downloading tv client config
+[youtube] UKqkJ3TzVqY: Downloading player 22f02d3d-main
+[youtube] UKqkJ3TzVqY: Downloading tv player API JSON
+[youtube] UKqkJ3TzVqY: Downloading ios player API JSON
+[debug] Loading youtube-nsig.22f02d3d-main from cache
+[debug] [youtube] Decrypted nsig vhynvut-WSKl00uP => 6E8TgEIfNVNZ0w
+[debug] [youtube] Decrypted nsig jfnrEmlgUL45T5BE => qLdrRNrpKE_TFQ
+[debug] [youtube] UKqkJ3TzVqY: ios client https formats require a GVS PO Token which was not provided. They will be skipped as they may yield HTTP Error 403. You can manually pass a GVS PO Token for this client with --extractor-args "youtube:po_token=ios.gvs+XXX". For more information, refer to  https://github.com/yt-dlp/yt-dlp/wiki/PO-Token-Guide . To enable these broken formats anyway, pass --extractor-args "youtube:formats=missing_pot"
+[youtube] UKqkJ3TzVqY: Downloading m3u8 information
+[debug] Sort order given by extractor: quality, res, fps, hdr:12, source, vcodec, channels, acodec, lang, proto
+[debug] Formats sorted by: hasvid, ie_pref, quality, res, fps, hdr:12(7), source, vcodec, channels, acodec, lang, proto, size, br, asr, vext, aext, hasaud, id
+INFO:downloader:Found direct URL in info: https://www.youtube.com/watch?...
+INFO:youtube_link_utils:Getting video info for: https://www.youtube.com/watch?v=UKqkJ3TzVqY
+INFO:app:Making request to: https://rr5---sn-cvh7knzd.googlevideo.com/videopla...
+ERROR:app:Error in download_file: cannot access local variable 'os' where it is not associated with a value
+INFO:youtube_link_utils:Getting video info for: https://www.youtube.com/watch?v=UKqkJ3TzVqY
