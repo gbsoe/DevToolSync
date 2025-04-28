@@ -661,7 +661,8 @@ def download_file():
     """Direct file download endpoint - this serves the actual file content instead of HTML"""
     import os
     import tempfile
-    
+    import yt_dlp
+
     # Get parameters
     video_id = request.args.get('v', '')
     format_id = request.args.get('format', '18')  # Default to 360p video
@@ -774,8 +775,7 @@ def download_file():
                     else:
                         # For video downloads
                         if format_id == 'best':
-                            format_string = 'best[height<=720]'
-                        else:
+                            format_string = 'best[height<=720]'                        else:
                             format_string = format_id
                                                 # Set output template for video
                         output_template = os.path.join(temp_dir, '%(title)s.%(ext)s')
@@ -876,44 +876,38 @@ def download_file():
 
                 # Try with our original proxy method as a fallback
                 try:
-                    logger.info(f"Falling back to direct proxy method: {direct_url[:50]}...")
+                    logger.info(f"Falling back to direct file serving method...")
 
-                    # Stream the remote content through our server
-                    headers = {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                        'Referer': 'https://www.youtube.com/',
-                        'Accept': '*/*',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Connection': 'keep-alive',
-                        'Range': 'bytes=0-'
+                    # Configure yt-dlp for direct download
+                    ydl_opts = {
+                        'format': format_id,
+                        'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
+                        'cookiefile': 'cookies.txt',
+                        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                        'quiet': True,
+                        'no_warnings': True,
+                        'nocheckcertificate': True,
+                        'geo_bypass': True
                     }
 
-                    remote_response = requests.get(direct_url, headers=headers, stream=True)
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(url, download=True)
+                        if not info:
+                            raise Exception("Could not download video")
 
-                    if remote_response.status_code != 200 and remote_response.status_code != 206:
-                        logger.error(f"Error from YouTube API: Status {remote_response.status_code}")
-                        flash("Error retrieving video content from YouTube. Please try again.", "danger")
-                        return redirect(f'/watch?v={video_id}')
+                        # Get the downloaded file path
+                        download_path = os.path.join(temp_dir, ydl.prepare_filename(info))
 
-                    # Create a streaming response
-                    def generate():
-                        for chunk in remote_response.iter_content(chunk_size=4096):
-                            yield chunk
+                        if not os.path.exists(download_path):
+                            raise Exception("Downloaded file not found")
 
-                    # Return a streaming response
-                    response = Response(generate(), remote_response.status_code)
-
-                    # Copy relevant headers
-                    for header in ['Content-Type', 'Content-Length']:
-                        if header in remote_response.headers:
-                            response.headers[header] = remote_response.headers[header]
-
-                    # Set download headers
-                    response.headers['Content-Type'] = mime_type
-                    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-                    return response
-
+                        # Return the file directly
+                        return send_file(
+                            download_path,
+                            as_attachment=True,
+                            download_name=filename,
+                            mimetype=mime_type
+                        )
                 except Exception as proxy_error:
                     logger.error(f"Error with fallback proxy: {str(proxy_error)}")
                     flash(f"Error: {str(pytube_error)}. Fallback also failed: {str(proxy_error)}", "danger")
@@ -931,13 +925,13 @@ def download_file():
             }
 
             remote_response = requests.get(direct_url, headers=headers, stream=True)
-            
+
             def generate():
                 for chunk in remote_response.iter_content(chunk_size=8192):
                     yield chunk
 
             response = Response(generate(), remote_response.status_code)
-            
+
             # Set proper headers for file download
             response.headers['Content-Type'] = mime_type
             response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
