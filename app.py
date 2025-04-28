@@ -659,6 +659,9 @@ def service_worker():
 @app.route('/download-file')
 def download_file():
     """Direct file download endpoint - this serves the actual file content instead of HTML"""
+    import os
+    import tempfile
+    
     # Get parameters
     video_id = request.args.get('v', '')
     format_id = request.args.get('format', '18')  # Default to 360p video
@@ -919,10 +922,27 @@ def download_file():
             # In development, redirect to the direct URL (works fine locally)
             logger.info(f"Development mode: Redirecting to direct URL: {direct_url[:50]}...")
 
-            # Create a redirect response with download headers
-            response = redirect(direct_url, code=302)
+            # Stream the content through our server instead of redirecting
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Range': 'bytes=0-'
+            }
+
+            remote_response = requests.get(direct_url, headers=headers, stream=True)
+            
+            def generate():
+                for chunk in remote_response.iter_content(chunk_size=8192):
+                    yield chunk
+
+            response = Response(generate(), remote_response.status_code)
+            
+            # Set proper headers for file download
             response.headers['Content-Type'] = mime_type
             response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+            if 'Content-Length' in remote_response.headers:
+                response.headers['Content-Length'] = remote_response.headers['Content-Length']
 
             return response
 
