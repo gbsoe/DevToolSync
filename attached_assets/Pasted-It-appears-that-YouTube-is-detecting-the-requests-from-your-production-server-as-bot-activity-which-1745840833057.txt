@@ -1,0 +1,58 @@
+It appears that YouTube is detecting the requests from your production server as bot activity, which is causing the downloads to fail and return HTML error pages instead of video files. Here are some strategies you can implement in your code to mitigate this issue:
+
+Use a Different User-Agent: Ensure that you are using a more standard and common User-Agent string in your requests. This can help avoid detection as a bot.
+
+Implement Retries: Retry the download with altered settings or a time delay if you encounter issues. This can include changing the format or user agent if the first attempt fails.
+
+Add Geo-Bypass: Make sure you are using the geo_bypass option. This is essential if the content is region-restricted.
+
+Use Referer Header: Set a referer header to mimic a legitimate browser request.
+
+Here's an example modification you can make in your downloader.py using the suggestions above with yt-dlp:
+
+import os
+import logging
+import yt_dlp
+from cookie_manager import ensure_fresh_cookies
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+class YoutubeDownloader:
+    def __init__(self):
+        self.base_opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'extract_flat': True,
+            'skip_download': False,
+            'format_sort': [
+                'res:1080p',
+                'res:720p',
+                'res:480p',
+                'res:360p',
+                'res:240p',
+                'res:144p'
+            ],
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Referer': 'https://www.youtube.com/'
+            },
+            'geo_bypass': True,  # Ensure this option is enabled
+        }
+    def download_video(self, url, output_path=None):
+        try:
+            ensure_fresh_cookies()  # Ensure the cookies are fresh
+            with yt_dlp.YoutubeDL(self.base_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                downloaded_file = os.path.join(output_path if output_path else '.', ydl.prepare_filename(info))
+                logger.info(f"Successfully downloaded video to {downloaded_file}")
+                return downloaded_file
+        except Exception as e:
+            logger.error(f"Error downloading video: {str(e)}")
+            raise
+# Example usage
+if __name__ == "__main__":
+    downloader = YoutubeDownloader()
+    downloader.download_video("your_youtube_video_url_here", output_path="desired_output_path")
+Additional Considerations
+Test with Different URLs: If some videos work while others don't, they may have specific restrictions. Log the errors to identify patterns.
+Monitor Server IP: Ensure you’re not hitting rate limits by checking how frequently you're making requests from the same production server IP.
+By implementing these strategies, you should have a better chance of successfully downloading videos on the production server.
