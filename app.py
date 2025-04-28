@@ -775,9 +775,10 @@ def download_file():
                     else:
                         # For video downloads
                         if format_id == 'best':
-                            format_string = 'best[height<=720]'                        else:
+                            format_string = 'best[height<=720]'
+                        else:
                             format_string = format_id
-                                                # Set output template for video
+                        # Set output template for video
                         output_template = os.path.join(temp_dir, '%(title)s.%(ext)s')
                         # Set proper extension for video files
                         file_extension = 'mp4'
