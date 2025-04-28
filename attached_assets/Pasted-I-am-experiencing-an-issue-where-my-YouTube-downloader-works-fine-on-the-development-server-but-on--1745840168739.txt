@@ -1,0 +1,51 @@
+I am experiencing an issue where my YouTube downloader works fine on the development server, but on the production server, it downloads a .htm file instead of the expected .mp4 file. The download likely returns an HTML error page (such as a 403 Forbidden) instead of the video file.
+
+Please do the following:
+Check for Server Configuration Differences:
+
+Verify that the production server has the same configuration as the development server, especially related to cookies, user-agent strings, and geo-bypass settings.
+
+Ensure that there are no network restrictions (e.g., firewalls, rate-limiting, or geo-blocking) affecting the download process on the production server.
+
+Ensure Consistent Dependencies:
+
+Compare the versions of yt-dlp and other dependencies between the development and production servers.
+
+If the versions differ, make sure to update the production server to match the development environment:
+
+bash
+Copy
+Edit
+pip install --upgrade yt-dlp
+Handle Network or Region Issues:
+
+Ensure that the downloader script is configured with the --geo-bypass flag in case of geo-restrictions.
+
+Verify that the server's IP is not blocked by YouTube.
+
+Check Cookies and Headers:
+
+Make sure that any necessary cookies (e.g., from cookies.txt) and headers (e.g., User-Agent) are being correctly passed during the request.
+
+Ensure the cookies file on the production server is valid and not expired.
+
+Review Caching and Proxy Configurations:
+
+If the production server uses caching (e.g., Nginx or a reverse proxy like Cloudflare), ensure that the request is not being cached incorrectly and serving an HTML error page.
+
+Disable caching for the video download process or ensure proper cache invalidation.
+
+Verify Redirect Handling:
+
+Ensure that the downloader script is following all necessary HTTP redirects from YouTube to the actual video file.
+
+If using yt-dlp, this should be handled automatically, but verify the redirect chain in production.
+
+Additional Debugging:
+Review both development and production server logs for differences in how the request is handled.
+
+Try manually fetching the URL using curl or wget on the production server to see if the server is receiving a valid response or an error page.
+
+Run the yt-dlp command directly on the production server to verify if the issue is with the server setup or the script itself.
+
+Let me know what you find and if any specific errors need further investigation.
